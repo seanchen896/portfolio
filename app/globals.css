@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+@theme {
+  /* Light "paper" environment — hero + project index */
+  --color-paper: #e7e2d6;
+  --color-paper-2: #ddd7c8;
+  --color-ink: #15140f;
+  --color-ink-soft: #56524a;
+  --color-line: #c9c2b1;
+
+  /* Dark "coal" environment — project detail (the Grantx move) */
+  --color-coal: #1a1916;
+  --color-coal-2: #232118;
+  --color-coal-line: #38352c;
+  --color-bone: #e9e4d7;
+  --color-bone-soft: #9a948568;
+
+  /* Single engineering accent — international orange */
+  --color-accent: #e5431b;
+
+  --font-display: var(--font-anton), "Arial Narrow", sans-serif;
+  --font-serif: var(--font-instrument), Georgia, serif;
+  --font-mono: var(--font-jetbrains), "SFMono-Regular", monospace;
+}
+
+:root {
+  --header-h: 4.5rem;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+/* Mono "technical" label — used for eyebrows, metadata keys, nav */
+.label {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+.serif {
+  font-family: var(--font-serif);
+}
+
+/* Blueprint grid texture for placeholder media */
+.blueprint {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.grain {
+  position: relative;
+}
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+a,
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
