@@ -200,8 +200,18 @@ const projectList: Omit<Project, "index">[] = [
     status: "Completed",
     hue: 45,
     motif: "circuit",
+      images: [
+      {
+        src: "/projects/broncohacks-interface.png",
+        caption: "Interface",
+      },
+      {
+        src: "/projects/posturepack_circut.jpg",
+        caption: "Circut"
+      }
+    ]
 
-    image: "/projects/broncohacks-interface.png",
+
   },
   {
     slug: "back-lock-folding-knife",
@@ -242,6 +252,11 @@ const projectList: Omit<Project, "index">[] = [
     hue: 5,
     motif: "wave",
     // image: "/projects/mazda.jpg",
+
+    pdf: {
+       src: "/projects/mazda.pdf",
+       title: "Preformance of Mazda CX-5 Report",
+     },
   },
 ];
 
