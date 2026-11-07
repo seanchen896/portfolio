@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { anton, instrumentSerif, jetbrainsMono } from "./fonts";
+import Script from "next/script";
+import { PortfolioTransitions } from "@/components/PortfolioTransitions";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -27,9 +28,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${anton.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable}`}
+      data-type="service"
+      suppressHydrationWarning
     >
-      <body>{children}</body>
+      <head><meta name="page-type" content="service" /><meta name="site-kind" content="tech" /><script dangerouslySetInnerHTML={{ __html: `try{document.documentElement.dataset.theme=localStorage.getItem('portfolio-theme')||'light';document.documentElement.dataset.motion=localStorage.getItem('portfolio-motion')||(matchMedia('(prefers-reduced-motion: reduce)').matches?'off':'on')}catch(e){}` }} /></head>
+      <body><link rel="stylesheet" href="/taste/motion.css" /><PortfolioTransitions>{children}</PortfolioTransitions><Script src="/taste/motion.js" type="module" strategy="afterInteractive" /></body>
     </html>
   );
 }

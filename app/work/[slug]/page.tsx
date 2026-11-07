@@ -5,6 +5,8 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { getAdjacent, getProject, projects } from "@/lib/projects";
 import { site } from "@/lib/site";
+import type { CSSProperties } from "react";
+import { getProjectColors } from "@/lib/project-colors";
 
 export function generateStaticParams() {
   return projects.map((p) => ({ slug: p.slug }));
@@ -39,12 +41,18 @@ export default async function ProjectPage({
   if (!project) notFound();
 
   const { next } = getAdjacent(slug);
+  const colors = getProjectColors(project);
 
   return (
-    <main className="bg-coal">
-      <SiteHeader theme="dark" />
-      <ProjectDetail project={project} next={next} />
-      <SiteFooter theme="dark" />
-    </main>
+    <div className="portfolio-work" style={{
+      "--page-bg": colors.backgroundColor,
+      "--page-ink": colors.ink,
+      "--page-muted": `color-mix(in srgb, ${colors.ink} 70%, ${colors.backgroundColor})`,
+      "--page-line": `color-mix(in srgb, ${colors.ink} 20%, ${colors.backgroundColor})`,
+    } as CSSProperties}>
+      <SiteHeader />
+      <main id="content" tabIndex={-1}><ProjectDetail project={project} next={next} /></main>
+      <SiteFooter projectColor />
+    </div>
   );
 }

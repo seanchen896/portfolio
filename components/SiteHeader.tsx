@@ -1,71 +1,30 @@
+"use client";
 import Link from "next/link";
+import { useRef, useState } from "react";
 import { site } from "@/lib/site";
 
-/**
- * Fixed top bar with an always-on frosted backdrop so the nav stays legible
- * over any background (the light name panel, the dark portrait panel, or the
- * coal detail pages) at every breakpoint. `theme` flips it for dark pages.
- */
-export function SiteHeader({ theme = "light" }: { theme?: "light" | "dark" }) {
-  const dark = theme === "dark";
-
-  const surface = dark
-    ? "bg-coal/80 border-coal-line/60 text-bone"
-    : "bg-paper/80 border-line/70 text-ink";
-
-  const link = dark
-    ? "text-bone/85 hover:text-bone"
-    : "text-ink/80 hover:text-ink";
-
-  return (
-    <header
-      className={`fixed inset-x-0 top-0 z-50 border-b backdrop-blur-md ${surface}`}
-    >
-      <div className="flex items-center justify-between px-5 py-3.5 sm:px-8">
-        <Link
-          href="/"
-          className="group flex items-center gap-2.5"
-          aria-label={`Home — ${site.name}`}
-        >
-          <span
-            className={`grid h-8 w-8 place-items-center font-display text-base leading-none ${
-              dark ? "bg-bone text-coal" : "bg-ink text-paper"
-            }`}
-          >
-            {site.initials}
-          </span>
-          <span className="hidden font-mono text-[0.8rem] font-medium uppercase tracking-[0.08em] sm:inline">
-            {site.shortName}
-          </span>
-        </Link>
-
-        <nav className="flex items-center gap-5 font-mono text-[0.8rem] font-medium uppercase tracking-[0.08em] sm:gap-7">
-          <Link href="/#work" className={`transition-colors ${link}`}>
-            Work
-          </Link>
-          <Link href="/#about" className={`hidden transition-colors sm:inline ${link}`}>
-            About
-          </Link>
-          <a
-            href={site.linkedin}
-            target="_blank"
-            rel="noreferrer"
-            className={`hidden transition-colors sm:inline ${link}`}
-          >
-            LinkedIn
-          </a>
-          <a
-            href={`mailto:${site.email}`}
-            className={`flex items-center gap-1.5 transition-colors ${link}`}
-          >
-            <span
-              className="inline-block h-1.5 w-1.5 rounded-full"
-              style={{ background: "var(--color-accent)" }}
-            />
-            Contact
-          </a>
-        </nav>
+export function SiteHeader({ theme: _theme }: { theme?: "light" | "dark" }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [panel, setPanel] = useState<"about" | "contact">("about");
+  function open(value: "about" | "contact") { setPanel(value); dialog.current?.showModal(); }
+  return <>
+    <header className="portfolio-header">
+      <a href="#content" className="skip-link">Skip to content</a>
+      <div className="portfolio-brand">
+        <Link className="portfolio-name" href="/">{site.shortName}</Link>
+        <button className="role-link" onClick={() => open("about")} aria-label="About Sean — Mechanical Engineer" aria-haspopup="dialog">
+          <span className="role-rest">Mechanical Engineer</span><span className="role-hover" aria-hidden="true">About me ↗</span>
+        </button>
       </div>
+      <button className="btn text-link" onClick={() => open("contact")} aria-haspopup="dialog">Contact</button>
     </header>
-  );
+    <dialog ref={dialog} className="portfolio-dialog" aria-labelledby="panel-title" onClick={event => { if (event.target === dialog.current) dialog.current.close(); }}>
+      <div className="dialog-surface">
+        <div className="dialog-top"><span>[{panel === "about" ? "About" : "Contact"}]</span><button autoFocus onClick={() => dialog.current?.close()} className="text-link" aria-label="Close dialog">Close ×</button></div>
+        <h2 id="panel-title">{panel === "about" ? "Sean Chen." : "Let’s talk."}</h2>
+        {panel === "about" ? <div className="dialog-copy"><p>Mechanical engineering student at UC Berkeley.</p>{site.about.map(p => <p key={p}>{p}</p>)}<dl className="about-facts">{site.facts.map(f => <div key={f.label}><dt>{f.label}</dt><dd>{f.value}</dd></div>)}</dl></div> : <div className="dialog-copy"><p>For projects, opportunities, or a conversation about engineering.</p><a className="contact-email text-link" href={`mailto:${site.email}`}>{site.email} ↗</a><p>{site.location}</p></div>}
+        <div className="dialog-links"><a className="text-link" href={site.linkedin} target="_blank" rel="noreferrer">LinkedIn ↗</a><a className="text-link" href={site.github} target="_blank" rel="noreferrer">GitHub ↗</a><a className="text-link" href={site.resume} target="_blank" rel="noreferrer">Résumé ↗</a></div>
+      </div>
+    </dialog>
+  </>;
 }

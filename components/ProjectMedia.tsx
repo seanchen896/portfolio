@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { Parallax } from "./Parallax";
 import { getProjectImages } from "@/lib/projects";
 import type { Project } from "@/lib/projects";
 
@@ -22,7 +23,7 @@ export function ProjectMedia({
   if (image) {
     return (
       <div className={`relative overflow-hidden ${className}`}>
-        <Image src={image.src} alt={image.alt} fill sizes={sizes} className="object-cover" />
+        <Parallax><Image src={image.src} alt={image.alt} fill sizes={sizes} className="object-cover" /></Parallax>
       </div>
     );
   }
@@ -38,6 +39,7 @@ export function ProjectMedia({
       aria-label={`${title} — placeholder render`}
       style={{ backgroundColor: base }}
     >
+      <Parallax>
       {/* atmospheric corner glow */}
       <div
         className="absolute -right-1/4 -top-1/4 h-2/3 w-2/3 rounded-full blur-3xl"
@@ -62,6 +64,7 @@ export function ProjectMedia({
         {motif === "blade" && <BladeMotif stroke={faint} accent={glow} />}
       </svg>
 
+      </Parallax>
       {/* technical corner ticks */}
       <Ticks />
 

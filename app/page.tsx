@@ -1,5 +1,3 @@
-import { AboutSection } from "@/components/AboutSection";
-import { Hero } from "@/components/Hero";
 import { ProjectIndex } from "@/components/ProjectIndex";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -7,12 +5,10 @@ import { projects } from "@/lib/projects";
 
 export default function Home() {
   return (
-    <main className="bg-paper">
+    <div className="portfolio-home">
       <SiteHeader theme="light" />
-      <Hero />
-      <ProjectIndex projects={projects} />
-      <AboutSection />
+      <main id="content" tabIndex={-1}><ProjectIndex projects={projects} /></main>
       <SiteFooter />
-    </main>
+    </div>
   );
 }

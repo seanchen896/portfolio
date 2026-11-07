@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import Image from "next/image";
 import { site } from "@/lib/site";
+import { Parallax } from "./Parallax";
 import { LiveClock } from "./LiveClock";
 
 const NAME_LINES = site.name.split(" ");
@@ -70,6 +71,7 @@ export function Hero() {
           transition={{ duration: 1, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
           className="relative min-h-[55svh] overflow-hidden bg-coal lg:min-h-full"
         >
+          <Parallax>
           {site.portrait ? (
             <Image
               src={site.portrait}
@@ -114,6 +116,8 @@ export function Hero() {
               </div>
             </>
           )}
+
+          </Parallax>
 
           {/* scroll cue — lives inside the right panel, clear of the meta strip */}
           <motion.a

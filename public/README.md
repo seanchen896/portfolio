@@ -1,7 +1,9 @@
+For the easiest way to add photos, run the site locally and open `/editor`. Upload photos and click **Save changes**.
+
 # Drop-in assets
 
 Everything here is served from the site root (`/`). No code changes needed —
-just add the files and (where noted) point `lib/site.ts` / `lib/projects.ts` at them.
+just add the files and (where noted) point `lib/site.ts` / `content/projects.json` at them.
 
 ## Portrait (hero, right side)
 1. Add an image to this folder, e.g. `public/portrait.jpg` (portrait orientation, ~4:5, ≥1200px tall).
@@ -15,7 +17,7 @@ just add the files and (where noted) point `lib/site.ts` / `lib/projects.ts` at 
 ## Project images
 1. Drop files into `public/projects/`, e.g. `public/projects/camera.jpg`
    (landscape, ~16:9 or 4:3, at least 1600px wide).
-2. In `lib/projects.ts`, set the `images` field for that project:
+2. In `content/projects.json`, set the `images` field for that project:
 
 ```ts
 images: [
@@ -34,7 +36,7 @@ still works for a single image, but `images` is the recommended option.
 
 ## Project PDFs
 1. Drop PDFs into `public/projects/`, e.g. `public/projects/tracking-report.pdf`.
-2. In `lib/projects.ts`, set the `pdf` field for that project:
+2. In `content/projects.json`, set the `pdf` field for that project:
 
 ```ts
 pdf: {
