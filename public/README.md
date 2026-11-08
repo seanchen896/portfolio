@@ -11,8 +11,9 @@ just add the files and (where noted) point `lib/site.ts` / `content/projects.jso
    Leave it `""` to keep the generated placeholder.
 
 ## Résumé / CV (download buttons)
-- Add your PDF as `public/sean-chen-resume.pdf` (must match `resume` in `lib/site.ts`).
-- The "Download Résumé" button and footer link will then work.
+- In the local editor, select a PDF under **Résumé download** and click **Update résumé**.
+- Uploaded versions go into `public/resumes/`; the active version is stored in `content/site-settings.json`. Both the footer and About dialog use this setting.
+- Previous versions are kept. Commit the new PDF and settings file when deploying. The original `june_2026.pdf` remains the default until you upload a replacement.
 
 ## Project images
 1. Drop files into `public/projects/`, e.g. `public/projects/camera.jpg`

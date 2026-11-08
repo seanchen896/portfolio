@@ -40,7 +40,7 @@ export default async function ProjectPage({
   const project = getProject(slug);
   if (!project) notFound();
 
-  const { next } = getAdjacent(slug);
+  const { next, previous } = getAdjacent(slug);
   const colors = getProjectColors(project);
 
   return (
@@ -51,7 +51,7 @@ export default async function ProjectPage({
       "--page-line": `color-mix(in srgb, ${colors.ink} 20%, ${colors.backgroundColor})`,
     } as CSSProperties}>
       <SiteHeader />
-      <main id="content" tabIndex={-1}><ProjectDetail project={project} next={next} /></main>
+      <main id="content" tabIndex={-1}><ProjectDetail project={project} next={next} previous={previous} /></main>
       <SiteFooter projectColor />
     </div>
   );

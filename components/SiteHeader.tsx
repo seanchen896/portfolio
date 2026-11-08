@@ -1,27 +1,55 @@
 "use client";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { PortfolioModeToggle } from "./PortfolioMode";
+import { useEffect, useRef, useState } from "react";
 import { site } from "@/lib/site";
 
 export function SiteHeader({ theme: _theme }: { theme?: "light" | "dark" }) {
+  const photography = usePathname().startsWith("/photography");
   const dialog = useRef<HTMLDialogElement>(null);
+  const opener = useRef<HTMLElement | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [panel, setPanel] = useState<"about" | "contact">("about");
-  function open(value: "about" | "contact") { setPanel(value); dialog.current?.showModal(); }
+  useEffect(() => () => clearTimeout(closeTimer.current), []);
+  function finishClose() {
+    clearTimeout(closeTimer.current);
+    dialog.current?.close();
+    dialog.current?.removeAttribute("data-closing");
+  }
+  function close() {
+    if (!dialog.current?.open || dialog.current.dataset.closing) return;
+    if (panel !== "about" || matchMedia("(prefers-reduced-motion: reduce)").matches || document.documentElement.dataset.motion === "off") { finishClose(); return; }
+    dialog.current.dataset.closing = "true";
+    closeTimer.current = setTimeout(finishClose, 420);
+  }
+  function open(value: "about" | "contact", trigger: HTMLElement) {
+    opener.current = trigger;
+    clearTimeout(closeTimer.current);
+    dialog.current?.removeAttribute("data-closing");
+    setPanel(value);
+    dialog.current?.showModal();
+  }
   return <>
     <header className="portfolio-header">
       <a href="#content" className="skip-link">Skip to content</a>
       <div className="portfolio-brand">
         <Link className="portfolio-name" href="/">{site.shortName}</Link>
-        <button className="role-link" onClick={() => open("about")} aria-label="About Sean — Mechanical Engineer" aria-haspopup="dialog">
-          <span className="role-rest">Mechanical Engineer</span><span className="role-hover" aria-hidden="true">About me ↗</span>
+        <button className="role-link" onClick={event => open("about", event.currentTarget)} aria-label="About Sean — Mechanical Engineer" aria-haspopup="dialog">
+          <span className="role-rest">{photography ? "Photography" : "Mechanical Engineer"}</span><span className="role-hover" aria-hidden="true">About me ↗</span>
         </button>
       </div>
-      <button className="btn text-link" onClick={() => open("contact")} aria-haspopup="dialog">Contact</button>
+      <div className="header-actions"><button className="btn text-link contact-trigger" onClick={event => open("contact", event.currentTarget)} aria-haspopup="dialog">Contact</button><PortfolioModeToggle /></div>
     </header>
-    <dialog ref={dialog} className="portfolio-dialog" aria-labelledby="panel-title" onClick={event => { if (event.target === dialog.current) dialog.current.close(); }}>
+    <dialog ref={dialog} className="portfolio-dialog" data-panel={panel} aria-labelledby="panel-title" onCancel={event => { event.preventDefault(); close(); }} onClose={() => { clearTimeout(closeTimer.current); dialog.current?.removeAttribute("data-closing"); if (!dialog.current?.open) opener.current?.focus({ preventScroll: true }); }} onAnimationEnd={event => { if (event.target === dialog.current && event.animationName === "about-drawer-out" && dialog.current.dataset.closing) finishClose(); }} onClick={event => {
+      if (event.target !== dialog.current) return;
+      if (panel === "contact") { close(); return; }
+      const bounds = dialog.current.getBoundingClientRect();
+      if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) close();
+    }}>
       <div className="dialog-surface">
-        <div className="dialog-top"><span>[{panel === "about" ? "About" : "Contact"}]</span><button autoFocus onClick={() => dialog.current?.close()} className="text-link" aria-label="Close dialog">Close ×</button></div>
-        <h2 id="panel-title">{panel === "about" ? "Sean Chen." : "Let’s talk."}</h2>
+        <div className="dialog-top"><span>[{panel === "about" ? "About" : "Contact"}]</span><button autoFocus onClick={close} className="text-link" aria-label="Close dialog">Close <span aria-hidden="true">×</span></button></div>
+        <h2 id="panel-title">{panel === "about" ? "About me" : "Let’s talk."}</h2>
         {panel === "about" ? <div className="dialog-copy"><p>Mechanical engineering student at UC Berkeley.</p>{site.about.map(p => <p key={p}>{p}</p>)}<dl className="about-facts">{site.facts.map(f => <div key={f.label}><dt>{f.label}</dt><dd>{f.value}</dd></div>)}</dl></div> : <div className="dialog-copy"><p>For projects, opportunities, or a conversation about engineering.</p><a className="contact-email text-link" href={`mailto:${site.email}`}>{site.email} ↗</a><p>{site.location}</p></div>}
         <div className="dialog-links"><a className="text-link" href={site.linkedin} target="_blank" rel="noreferrer">LinkedIn ↗</a><a className="text-link" href={site.github} target="_blank" rel="noreferrer">GitHub ↗</a><a className="text-link" href={site.resume} target="_blank" rel="noreferrer">Résumé ↗</a></div>
       </div>

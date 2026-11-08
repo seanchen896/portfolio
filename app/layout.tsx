@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { PortfolioTransitions } from "@/components/PortfolioTransitions";
+import { PortfolioMode } from "@/components/PortfolioMode";
+import { PortfolioMotion } from "@/components/PortfolioMotion";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -31,8 +33,8 @@ export default function RootLayout({
       data-type="service"
       suppressHydrationWarning
     >
-      <head><meta name="page-type" content="service" /><meta name="site-kind" content="tech" /><script dangerouslySetInnerHTML={{ __html: `try{document.documentElement.dataset.theme=localStorage.getItem('portfolio-theme')||'light';document.documentElement.dataset.motion=localStorage.getItem('portfolio-motion')||(matchMedia('(prefers-reduced-motion: reduce)').matches?'off':'on')}catch(e){}` }} /></head>
-      <body><link rel="stylesheet" href="/taste/motion.css" /><PortfolioTransitions>{children}</PortfolioTransitions><Script src="/taste/motion.js" type="module" strategy="afterInteractive" /></body>
+      <head><meta name="page-type" content="service" /><meta name="site-kind" content="tech" /><script dangerouslySetInnerHTML={{ __html: `try{document.documentElement.dataset.theme=localStorage.getItem('portfolio-theme')||'light'}catch(e){}document.documentElement.dataset.motion=matchMedia('(prefers-reduced-motion: reduce)').matches?'off':'on';if(location.pathname==='/'&&document.documentElement.dataset.motion!=='off')document.documentElement.dataset.intro='pending'` }} /></head>
+      <body><link rel="stylesheet" href="/taste/motion.css" /><PortfolioMode><PortfolioTransitions><PortfolioMotion />{children}</PortfolioTransitions></PortfolioMode><Script src="/taste/motion.js" type="module" strategy="afterInteractive" /></body>
     </html>
   );
 }

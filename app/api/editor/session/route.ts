@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSession, localRequest, passwordMatches, sessionCookie, sessionLifetime } from "@/lib/editor-auth";
+import { createSession, localRequest, passwordMatches, revokeSession, sessionCookie } from "@/lib/editor-auth";
 
 // The editor is local-only, so use a shared attempt budget instead of trusting IP headers.
 const state = globalThis as typeof globalThis & { editorAttempts?: { count: number; until: number } };
@@ -9,6 +9,7 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json();
     if (data.action === "logout") {
+      revokeSession(request);
       const response = NextResponse.json({ ok: true });
       response.cookies.set(sessionCookie, "", { httpOnly: true, sameSite: "strict", path: "/", maxAge: 0 });
       return response;
@@ -20,8 +21,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Incorrect password." }, { status: 401 });
     }
     state.editorAttempts.count = 0;
-    const response = NextResponse.json({ ok: true });
-    response.cookies.set(sessionCookie, createSession(), { httpOnly: true, sameSite: "strict", secure: request.nextUrl.protocol === "https:", path: "/", maxAge: sessionLifetime });
+    const response = NextResponse.json({ token: createSession() }, { headers: { "Cache-Control": "no-store" } });
+    // Remove the previous persistent login cookie. Visits now unlock in memory only.
+    response.cookies.set(sessionCookie, "", { httpOnly: true, sameSite: "strict", path: "/", maxAge: 0 });
     return response;
   } catch { return NextResponse.json({ error: "Unable to sign in." }, { status: 400 }); }
 }

@@ -13,7 +13,7 @@ export function AboutSection() {
       </div>
 
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1.4fr_1fr] lg:gap-16">
-        {/* statement + paragraphs */}
+        {}
         <div>
           <Reveal>
             <p className="serif text-3xl leading-[1.15] sm:text-5xl sm:leading-[1.1]">
@@ -39,7 +39,7 @@ export function AboutSection() {
                 rel="noreferrer"
                 className="group inline-flex items-center gap-2 rounded-full bg-ink px-5 py-3 text-paper transition-colors hover:bg-[var(--color-accent)]"
               >
-                <span className="label">Download Résumé</span>
+                <span className="label">Résumé</span>
                 <span aria-hidden className="transition-transform group-hover:translate-y-0.5">
                   ↓
                 </span>

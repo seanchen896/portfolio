@@ -1,17 +1,21 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import type { Project, ResolvedProjectImage } from "@/lib/projects";
-import { getProjectImages } from "@/lib/projects";
+import type { Project, ResolvedProjectImage, ResolvedProjectPdf } from "@/lib/projects";
+import { getProjectImages, getProjectPdfs } from "@/lib/project-media";
 import { getProjectColors, projectPalettes } from "@/lib/project-colors";
+import { ResumeEditor } from "./ResumeEditor";
+import type { ResumeSettings } from "@/lib/site-settings";
+import { useEditorRequest } from "./EditorSession";
 
 type Entry = Omit<Project, "index">;
 const input = "mt-2 block w-full rounded border border-line bg-white/50 p-3 text-sm text-ink";
 const button = "rounded border border-line px-4 py-2 text-sm hover:bg-paper-2 disabled:opacity-40";
 
-export function ProjectEditor({ initial }: { initial: Entry[] }) {
+export function ProjectEditor({ initial, initialVersion, resume }: { initial: Entry[]; initialVersion: string; resume: ResumeSettings }) {
+  const editorRequest = useEditorRequest();
   const [projects, setProjects] = useState(initial);
-  const [version, setVersion] = useState(JSON.stringify(initial, null, 2) + "\n");
+  const [version, setVersion] = useState(initialVersion);
   const [selected, setSelected] = useState(0);
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -28,23 +32,29 @@ export function ProjectEditor({ initial }: { initial: Entry[] }) {
     setDirty(true); setMessage("");
   }
   const images = project ? getProjectImages(project) : [];
+  const pdfs = project ? getProjectPdfs(project) : [];
   function updateImage(i: number, patch: Partial<ResolvedProjectImage>) {
     update({ images: images.map((im, j) => i === j ? { ...im, ...patch } : im), image: undefined });
   }
-  async function upload(files: FileList | null) {
-    if (!files?.length) return;
+  async function upload(files: File[]) {
+    if (!files.length) return;
     setBusy(true); setMessage("");
     const uploaded: ResolvedProjectImage[] = [];
+    const failures: string[] = [];
     try {
-      for (const file of Array.from(files)) {
-        const data = new FormData(); data.set("action", "upload"); data.set("file", file);
-        const response = await fetch("/api/editor", { method: "POST", body: data });
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error);
-        uploaded.push({ src: result.src, alt: `${project.title} photo`, caption: "" });
+      for (const [index, file] of files.entries()) {
+        setMessage(`Uploading photo ${index + 1} of ${files.length}…`);
+        try {
+          if (!file.size || file.size > 50 * 1024 * 1024) throw new Error("Choose a non-empty photo up to 50 MB.");
+          const data = new FormData(); data.set("action", "upload"); data.set("file", file);
+          const response = await editorRequest("/api/editor", { method: "POST", body: data });
+          const result = await response.json();
+          if (!response.ok) throw new Error(result.error);
+          uploaded.push({ src: result.src, alt: `${project.title} photo`, caption: "" });
+        } catch (error) { failures.push(`${file.name}: ${error instanceof Error ? error.message : "Upload failed."}`); }
       }
-      setMessage("Photos added. Save changes to show them on your website.");
-    } catch (error) { setMessage(error instanceof Error ? error.message : "Upload failed."); }
+      setMessage([uploaded.length ? `${uploaded.length} of ${files.length} photos added. Save changes to show them on your website.` : "No photos were added.", ...failures].join("\n"));
+    }
     finally {
       if (uploaded.length) { setProjects(all => all.map((p, i) => i === selected ? { ...p, images: [...images, ...uploaded], image: undefined } : p)); setDirty(true); }
       setBusy(false);
@@ -57,7 +67,7 @@ export function ProjectEditor({ initial }: { initial: Entry[] }) {
     try {
       for (const file of Array.from(files)) {
         const data = new FormData(); data.set("action", "upload-stl"); data.set("file", file);
-        const response = await fetch("/api/editor", { method: "POST", body: data });
+        const response = await editorRequest("/api/editor", { method: "POST", body: data });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error);
         uploaded.push({ src: result.src, title: file.name.replace(/\.stl$/i, "") });
@@ -69,20 +79,30 @@ export function ProjectEditor({ initial }: { initial: Entry[] }) {
       setBusy(false);
     }
   }
-  async function logout() {
-    if (dirty && !window.confirm("You have unsaved changes. Lock the editor without saving?")) return;
-    setBusy(true);
+  async function uploadPdfs(files: FileList | null) {
+    if (!files?.length) return;
+    setBusy(true); setMessage("");
+    const uploaded: ResolvedProjectPdf[] = [];
     try {
-      const response = await fetch("/api/editor/session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "logout" }) });
-      if (!response.ok) throw new Error("Could not lock the editor. Please retry.");
-      window.location.reload();
-    } catch (error) { setMessage(error instanceof Error ? error.message : "Unable to lock editor."); setBusy(false); }
+      for (const file of Array.from(files)) {
+        const data = new FormData(); data.set("action", "upload-pdf"); data.set("file", file);
+        const response = await editorRequest("/api/editor", { method: "POST", body: data });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error);
+        uploaded.push({ src: result.src, title: file.name.replace(/\.pdf$/i, "") || "Project PDF", caption: "" });
+      }
+      setMessage("PDFs added. Save changes to show them on your project page.");
+    } catch (error) { setMessage(error instanceof Error ? error.message : "PDF upload failed."); }
+    finally {
+      if (uploaded.length) { setProjects(all => all.map((p, i) => i === selected ? { ...p, pdfs: [...pdfs, ...uploaded], pdf: undefined } : p)); setDirty(true); }
+      setBusy(false);
+    }
   }
   async function save(event: FormEvent) {
     event.preventDefault(); setBusy(true); setMessage("");
     try {
       const data = new FormData(); data.set("projects", JSON.stringify(projects)); data.set("version", version);
-      const response = await fetch("/api/editor", { method: "POST", body: data });
+      const response = await editorRequest("/api/editor", { method: "POST", body: data });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
       setVersion(result.version); setDirty(false); setMessage("Saved to your project files. Refresh the preview to see your changes.");
@@ -122,9 +142,10 @@ export function ProjectEditor({ initial }: { initial: Entry[] }) {
     <main className="mx-auto max-w-7xl px-5 py-10 sm:px-8">
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-8">
         <div><p className="label text-ink-soft">Local workspace</p><h1 className="serif mt-3 text-5xl">Edit your projects</h1><p className="mt-3 max-w-xl text-sm text-ink-soft">Add projects, write their stories, and upload photos. Save when you’re ready to update your website.</p></div>
-        <button type="button" disabled={busy} onClick={logout} className={button}>Lock editor</button>
+        <p className="text-xs text-ink-soft">Locks automatically when you leave or reload.</p>
         <a href="/" target="_blank" rel="noreferrer" className={button}>Open website ↗</a>
       </div>
+      <ResumeEditor initial={resume} disabled={busy} onBusyChange={setBusy} />
       <div className="mt-8 grid gap-8 lg:grid-cols-[260px_1fr]">
         <aside><button disabled={busy} className={`${button} w-full`} onClick={add}>+ New project</button>
           <p className="mt-4 text-xs text-ink-soft">Use the arrows to change the website order.</p>
@@ -138,8 +159,8 @@ export function ProjectEditor({ initial }: { initial: Entry[] }) {
             <label className="block text-sm">Full description <span className="text-ink-soft">— separate paragraphs with a blank line</span><textarea key={`${selected}-about`} rows={8} className={input} defaultValue={project.about.join('\n\n')} onChange={e => update({ about: e.target.value.split(/\n\s*\n/) })} /></label>
             <div className="grid gap-5 sm:grid-cols-3">{(['role','tools','team'] as const).map(key => <label key={key} className="text-sm capitalize">{key}<span className="block text-xs normal-case text-ink-soft">One item per line</span><textarea key={`${selected}-${key}`} className={input} rows={4} defaultValue={project[key].join('\n')} onChange={e => update({ [key]: e.target.value.split('\n').filter(v => v.trim()) })} /></label>)}</div>
             <section className="border-t border-line pt-6"><h2 className="serif text-3xl">Project colors</h2><p className="mt-2 text-sm text-ink-soft">Title color controls the rolling title on the home page. Background color fills the project detail page; its text automatically switches to dark or light for readability.</p><div className="mt-5 grid gap-5 sm:grid-cols-2">{([['titleColor', 'Title color'], ['backgroundColor', 'Background color']] as const).map(([key, label]) => <label key={key} className="text-sm">{label}<div className="mt-2 flex items-center gap-3"><input type="color" aria-label={label} value={getProjectColors(project)[key]} onChange={event => update({ [key]: event.target.value })} className="h-12 w-16 cursor-pointer rounded border border-line bg-white p-1" /><span className="font-mono text-sm">{getProjectColors(project)[key]}</span></div></label>)}</div><div className="mt-5 rounded p-6 text-3xl tracking-tight" style={{ color: getProjectColors(project).ink, backgroundColor: getProjectColors(project).backgroundColor }}>{project.title || 'Project title'}</div></section>
-            <section className="border-t border-line pt-6"><h2 className="serif text-3xl">Photos</h2><p className="mt-2 text-sm text-ink-soft">The first photo is your cover. Upload JPG, PNG, WebP, GIF, or AVIF files up to 10 MB each.</p>
-              <label className="mt-4 block text-sm">Add photos<input type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,image/avif" className={input} onChange={e => { void upload(e.target.files); e.target.value = ""; }} /></label>
+            <section className="border-t border-line pt-6"><h2 className="serif text-3xl">Photos</h2><p className="mt-2 text-sm text-ink-soft">The first photo is your cover. Select several files with Command (Mac) or Ctrl (Windows). JPG, PNG, WebP, GIF, AVIF, HEIC, HEIF, TIFF, and BMP are supported, up to 50 MB each. HEIC, HEIF, TIFF, and BMP are converted to JPG on macOS.</p>
+              <label className="mt-4 block text-sm">Add photos<input type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/heic,image/heif,image/tiff,image/bmp,.heic,.heif,.tif,.tiff,.bmp" className={input} onChange={e => { const files = Array.from(e.target.files ?? []); e.target.value = ""; void upload(files); }} /></label>
               <div className="mt-5 space-y-5">{images.map((im, i) => <div key={`${selected}-${i}-${im.src}`} className="grid gap-4 rounded border border-line p-4 sm:grid-cols-[140px_1fr]">
                 {/* Local uploaded images are previewed without the image optimizer. */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -148,11 +169,12 @@ export function ProjectEditor({ initial }: { initial: Entry[] }) {
                   <div className="mt-3 flex flex-wrap gap-2"><button type="button" className={button} disabled={i === 0} onClick={() => update({ images: [im, ...images.filter((_, j) => j !== i)], image: undefined })}>{i === 0 ? 'Cover photo' : 'Make cover'}</button><button type="button" className={button} onClick={() => update({ images: images.filter((_, j) => j !== i), image: undefined })}>Remove photo</button></div>
                 </div></div>)}</div>
             </section>
+            <section className="border-t border-line pt-6"><h2 className="serif text-3xl">PDF documents</h2><p className="mt-2 text-sm text-ink-soft">Add reports, drawings, or presentations as PDFs, up to 25 MB each. Each document appears on the project page.</p><label className="mt-4 block text-sm">Add PDFs<input type="file" accept=".pdf,application/pdf" multiple className={input} onChange={e => { void uploadPdfs(e.target.files); e.target.value = ""; }} /></label><div className="mt-4 space-y-4">{pdfs.map((pdf, i) => <div key={`${pdf.src}-${i}`} className="rounded border border-line p-4"><label className="text-sm">PDF title<input required className={input} value={pdf.title} onChange={e => update({ pdfs: pdfs.map((p, j) => j === i ? { ...p, title: e.target.value } : p), pdf: undefined })} /></label><label className="mt-3 block text-sm">PDF caption<input className={input} value={pdf.caption ?? ""} onChange={e => update({ pdfs: pdfs.map((p, j) => j === i ? { ...p, caption: e.target.value } : p), pdf: undefined })} /></label><div className="mt-3 flex gap-3"><a href={pdf.src} target="_blank" rel="noreferrer" className={button}>Open PDF ↗</a><button type="button" className={button} onClick={() => update({ pdfs: pdfs.filter((_, j) => j !== i), pdf: undefined })}>Remove PDF</button></div></div>)}</div></section>
             <section className="border-t border-line pt-6"><h2 className="serif text-3xl">3D models</h2><p className="mt-2 text-sm text-ink-soft">Upload STL files up to 25 MB. Visitors can rotate, zoom, pan, and download each model.</p><label className="mt-4 block text-sm">Add STL files<input type="file" accept=".stl" multiple className={input} onChange={e => { void uploadModels(e.target.files); e.target.value = ""; }} /></label><div className="mt-4 space-y-4">{(project.models ?? []).map((model, i) => <div key={model.src} className="rounded border border-line p-4"><label className="text-sm">Model title<input required className={input} value={model.title} onChange={e => update({ models: project.models?.map((m, j) => j === i ? { ...m, title: e.target.value } : m) })} /></label><div className="mt-3 flex gap-3"><a href={model.src} download className={button}>Download STL</a><button type="button" className={button} onClick={() => update({ models: project.models?.filter((_, j) => j !== i) })}>Remove model</button></div></div>)}</div></section>
             <div className="flex flex-wrap items-center gap-3 border-t border-line pt-6"><button type="submit" className="rounded bg-ink px-6 py-3 text-sm text-paper">{busy ? 'Working…' : 'Save changes'}</button><span className="text-sm text-ink-soft">{dirty ? 'Unsaved changes' : 'All changes saved'}</span><a className={`${button} ml-auto`} href={`/work/${project.slug}`} target="_blank" rel="noreferrer">View project ↗</a></div>
             <div className="border-t border-line pt-6"><button type="button" className={`${button} text-red-700`} onClick={remove}>Delete project</button><p className="mt-2 text-xs text-ink-soft">Deletion takes effect when you save. Photos and STL files stay on disk.</p></div>
           </fieldset> : <div className="space-y-5"><p>No projects yet. Add a new project or undo the last deletion.</p><button type="submit" disabled={busy} className="rounded bg-ink px-6 py-3 text-sm text-paper">{busy ? 'Working…' : 'Save changes'}</button></div>}
-          <p role="status" aria-live="polite" className="mt-4 text-sm">{message}</p>
+          <p role="status" aria-live="polite" className="mt-4 whitespace-pre-line text-sm">{message}</p>
         </form>
       </div>
     </main>

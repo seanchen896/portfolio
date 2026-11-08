@@ -59,6 +59,7 @@ export type Project = {
   images?: ProjectImage[];
   image?: string;
   pdf?: ProjectPdf;
+  pdfs?: ProjectPdf[];
   models?: { src: string; title: string }[];
 };
 
@@ -75,54 +76,12 @@ export function getProject(slug: string): Project | undefined {
   return projects.find((p) => p.slug === slug);
 }
 
-export function getAdjacent(slug: string): { next: Project } {
+export function getAdjacent(slug: string): { next: Project; previous: Project } {
   const i = projects.findIndex((p) => p.slug === slug);
   const next = projects[(i + 1) % projects.length];
-  return { next };
+  const previous = projects[(i - 1 + projects.length) % projects.length];
+  return { next, previous };
 }
 
-export function getProjectImages(
-  project: Pick<Project, "title" | "image" | "images">,
-): ResolvedProjectImage[] {
-  if (project.images?.length) {
-    return project.images.map((image, i) => {
-      if (typeof image === "string") {
-        return {
-          src: image,
-          alt: `${project.title} image ${i + 1}`,
-        };
-      }
-
-      return {
-        src: image.src,
-        alt: image.alt ?? `${project.title} image ${i + 1}`,
-        caption: image.caption,
-      };
-    });
-  }
-
-  if (project.image) {
-    return [{ src: project.image, alt: project.title }];
-  }
-
-  return [];
-}
-
-export function getProjectPdf(
-  project: Pick<Project, "title" | "pdf">,
-): ResolvedProjectPdf | undefined {
-  if (!project.pdf) return undefined;
-
-  if (typeof project.pdf === "string") {
-    return {
-      src: project.pdf,
-      title: `${project.title} PDF`,
-    };
-  }
-
-  return {
-    src: project.pdf.src,
-    title: project.pdf.title ?? `${project.title} PDF`,
-    caption: project.pdf.caption,
-  };
-}
+// Keep media helpers independent of saved JSON so editor saves do not reload its session.
+export { getProjectImages, getProjectPdf, getProjectPdfs } from "./project-media";

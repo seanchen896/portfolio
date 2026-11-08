@@ -1,3 +1,5 @@
+import settings from "@/content/site-settings.json";
+
 /**
  * Central site configuration — edit everything about "you" here in one place.
  * Drop-in assets (portrait, resume) go in /public; see /public/README.md.
@@ -22,8 +24,8 @@ export const site = {
   timezone: "America/Los_Angeles",
   availability: "Available 2026",
 
-  // Drop a PDF named exactly this into /public to enable the Resume button.
-  resume: "/june_2026.pdf",
+  // Managed through the local editor's Résumé section.
+  resume: settings.resume.src,
 
   // Drop an image into /public and set its path here (e.g. "/portrait.jpg").
   // Leave "" to keep the generated placeholder.

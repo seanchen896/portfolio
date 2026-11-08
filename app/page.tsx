@@ -7,7 +7,9 @@ export default function Home() {
   return (
     <div className="portfolio-home">
       <SiteHeader theme="light" />
-      <main id="content" tabIndex={-1}><ProjectIndex projects={projects} /></main>
+      <main id="content" tabIndex={-1}>
+        <ProjectIndex projects={projects} />
+      </main>
       <SiteFooter />
     </div>
   );

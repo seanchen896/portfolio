@@ -1,0 +1,176 @@
+{
+  "photos": [
+    {
+      "id": "e5492cdd-919d-4bcb-88bb-c4c407250c90",
+      "src": "/photography/d4faa132-af79-496c-8bfc-257cbf89e5c1.jpg",
+      "title": "san diego",
+      "description": "",
+      "category": "",
+      "width": 6000,
+      "height": 4000,
+      "collectionIds": [
+        "27a0b874-8237-4b2b-8d5a-a301b28f44d2"
+      ]
+    },
+    {
+      "id": "7a2952e5-fc4f-429b-a486-eee3ac2e2aa1",
+      "src": "/photography/52bfc958-492a-41c1-a137-f81a7b927b4e.jpg",
+      "title": "hiking",
+      "description": "",
+      "category": "",
+      "width": 4000,
+      "height": 6000,
+      "collectionIds": [
+        "71c76377-b743-4df1-8775-73ccce98c42d"
+      ]
+    },
+    {
+      "id": "ce1c0eb0-b2e1-4edd-83c6-8c25f10910c5",
+      "src": "/photography/b7a944fd-2bb5-4f8a-b3ce-65dfbb4b145e.jpg",
+      "title": "santa maria",
+      "description": "",
+      "category": "",
+      "width": 4000,
+      "height": 6000,
+      "collectionIds": [
+        "71c76377-b743-4df1-8775-73ccce98c42d"
+      ]
+    },
+    {
+      "id": "a64a18ce-9afa-48f4-a3b5-3f68c288681a",
+      "src": "/photography/951a0585-46b6-46a3-9432-f185662467a2.jpg",
+      "title": "florence",
+      "description": "",
+      "category": "",
+      "width": 6000,
+      "height": 4000,
+      "collectionIds": [
+        "09293ab3-4519-42c6-bb64-fe7697882ea5"
+      ]
+    },
+    {
+      "id": "31b5bc9f-2a00-44a3-82e4-2915e909f5a6",
+      "src": "/photography/c644cdf8-c118-4d99-9f99-0d90567d8c2b.jpg",
+      "title": "pantheon",
+      "description": "",
+      "category": "",
+      "width": 6000,
+      "height": 4000,
+      "collectionIds": [
+        "71c76377-b743-4df1-8775-73ccce98c42d"
+      ]
+    },
+    {
+      "id": "611ef552-b572-4f22-9be3-033acf050247",
+      "src": "/photography/c805afda-edf3-412f-b090-2b6ee26f4ad9.jpg",
+      "title": "rome",
+      "description": "",
+      "category": "",
+      "width": 6000,
+      "height": 4000,
+      "collectionIds": [
+        "09293ab3-4519-42c6-bb64-fe7697882ea5"
+      ]
+    },
+    {
+      "id": "f5c250d1-1d25-41c2-951c-49c0b2142c44",
+      "src": "/photography/5ab36448-afea-4279-b416-db491dc92ade.jpg",
+      "title": "colosseum",
+      "description": "",
+      "category": "",
+      "width": 4000,
+      "height": 6000,
+      "collectionIds": [
+        "71c76377-b743-4df1-8775-73ccce98c42d"
+      ]
+    },
+    {
+      "id": "b8633c9d-eed1-4be8-afa6-8aaba7f92d4e",
+      "src": "/photography/8ebe72ea-b9f2-47c3-84b0-d4b7834df6af.jpg",
+      "title": "hotel waldhaus am see",
+      "description": "",
+      "category": "",
+      "width": 6000,
+      "height": 4000,
+      "collectionIds": [
+        "27a0b874-8237-4b2b-8d5a-a301b28f44d2"
+      ]
+    },
+    {
+      "id": "8fad7ad3-7109-4b83-8298-2ec9a7efcfba",
+      "src": "/photography/296a16cd-67c1-49d2-9d72-074181469f5d.jpg",
+      "title": "st. moritz",
+      "description": "",
+      "category": "",
+      "width": 6000,
+      "height": 4000,
+      "collectionIds": []
+    },
+    {
+      "id": "a72187f4-d4e9-4623-85a6-6d4c61c3bc8c",
+      "src": "/photography/ccd48e4a-9383-451d-8bb1-832ddbdc8adc.jpg",
+      "title": "alps",
+      "description": "",
+      "category": "",
+      "width": 6000,
+      "height": 4000,
+      "collectionIds": [
+        "27a0b874-8237-4b2b-8d5a-a301b28f44d2"
+      ]
+    },
+    {
+      "id": "b35eeb36-a51b-46cc-a9fa-2f0571a83d2a",
+      "src": "/photography/9bbeead6-7a75-41a1-9642-1f241a2e0bb3.jpg",
+      "title": "huntington beach",
+      "description": "",
+      "category": "",
+      "width": 6000,
+      "height": 4000,
+      "collectionIds": [
+        "27a0b874-8237-4b2b-8d5a-a301b28f44d2"
+      ]
+    },
+    {
+      "id": "db936788-5c89-4760-a3e4-60a42ce34a1d",
+      "src": "/photography/48df93d5-d203-4715-9803-81f1d9299980.jpg",
+      "title": "joshua tree",
+      "description": "",
+      "category": "",
+      "width": 6000,
+      "height": 4000,
+      "collectionIds": [
+        "27a0b874-8237-4b2b-8d5a-a301b28f44d2"
+      ]
+    },
+    {
+      "id": "0c581210-5957-46c7-ab41-e3283059e7f3",
+      "src": "/photography/ba3a9c30-36c9-4ec8-b53a-1203b18f8e3b.jpg",
+      "title": "lovers",
+      "description": "",
+      "category": "",
+      "width": 4000,
+      "height": 6000,
+      "collectionIds": [
+        "71c76377-b743-4df1-8775-73ccce98c42d"
+      ]
+    }
+  ],
+  "collections": [
+    {
+      "id": "27a0b874-8237-4b2b-8d5a-a301b28f44d2",
+      "title": "landscape",
+      "description": ""
+    },
+    {
+      "id": "09293ab3-4519-42c6-bb64-fe7697882ea5",
+      "title": "city",
+      "description": ""
+    },
+    {
+      "id": "71c76377-b743-4df1-8775-73ccce98c42d",
+      "title": "detail",
+      "description": ""
+    }
+  ],
+  "featuredId": "a64a18ce-9afa-48f4-a3b5-3f68c288681a"
+}

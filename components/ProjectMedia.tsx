@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { Parallax } from "./Parallax";
-import { getProjectImages } from "@/lib/projects";
+import { getProjectImages } from "@/lib/project-media";
 import type { Project } from "@/lib/projects";
 
 /**

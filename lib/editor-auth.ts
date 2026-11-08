@@ -1,9 +1,10 @@
-import { createHmac, scryptSync, timingSafeEqual } from "node:crypto";
-import { cookies } from "next/headers";
+import { createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import type { NextRequest } from "next/server";
 
 export const sessionCookie = "portfolio-editor";
-export const sessionLifetime = 8 * 60 * 60;
+export const sessionLifetime = 30 * 60;
+const state = globalThis as typeof globalThis & { portfolioEditorSessions?: Map<string, number> };
+const sessions = state.portfolioEditorSessions ??= new Map<string, number>();
 
 export function localRequest(request: NextRequest) {
   try {
@@ -26,11 +27,18 @@ function sign(value: string) {
 }
 export function createSession() {
   const expiry = String(Date.now() + sessionLifetime * 1000);
-  return `${expiry}.${sign(expiry)}`;
+  const value = `${randomBytes(24).toString("hex")}.${expiry}`;
+  const token = `${value}.${sign(value)}`;
+  for (const [key, expires] of sessions) if (expires <= Date.now()) sessions.delete(key);
+  sessions.set(token, Number(expiry));
+  return token;
 }
-export async function editorAuthenticated() {
+export function revokeSession(request: NextRequest) {
+  sessions.delete(request.headers.get("authorization")?.replace(/^Bearer /, "") ?? "");
+}
+export async function editorAuthenticated(request: NextRequest) {
   if (!process.env.EDITOR_SESSION_SECRET) return false;
-  const token = (await cookies()).get(sessionCookie)?.value ?? "";
-  const [expiry, signature, extra] = token.split(".");
-  return !extra && !!expiry && !!signature && Number(expiry) > Date.now() && equal(signature, sign(expiry));
+  const token = request.headers.get("authorization")?.replace(/^Bearer /, "") ?? "";
+  const [nonce, expiry, signature, extra] = token.split(".");
+  return !extra && !!nonce && !!expiry && !!signature && sessions.has(token) && Number(expiry) > Date.now() && equal(signature, sign(`${nonce}.${expiry}`));
 }
