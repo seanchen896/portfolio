@@ -35,7 +35,7 @@ export function startPortfolioIntro(list: HTMLOListElement, move: (turns: number
   let characters = -1;
   let width = 0;
   let height = 0;
-  const properties = ['--intro-projects', '--intro-chrome', '--intro-cover', '--intro-details', '--intro-name-surface'];
+  const properties = ['--intro-projects', '--intro-chrome', '--intro-cover', '--intro-details'];
   function cancel() {
     cancelled = true;
     cancelAnimationFrame(frame);
@@ -65,7 +65,6 @@ export function startPortfolioIntro(list: HTMLOListElement, move: (turns: number
     root.style.setProperty('--intro-chrome', String(flight));
     root.style.setProperty('--intro-details', String(smooth((flight - .3) / .7)));
     root.style.setProperty('--intro-cover', String(1 - flight));
-    root.style.setProperty('--intro-name-surface', String(1 - flight));
     if (flight < 1) {
       const destination = brand.getBoundingClientRect();
       const finalScale = parseFloat(getComputedStyle(brand).fontSize) / parseFloat(getComputedStyle(name).fontSize);

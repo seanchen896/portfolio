@@ -15,13 +15,14 @@ export const site = {
 
   // Contact + social — used in header, footer, and About
   email: "seanchen8964@gmail.com",
+  schoolEmail: "seannchen@berkeley.edu",
   linkedin: "https://www.linkedin.com/in/schen896/",
   github: "https://github.com/seanchen896",
 
   // Hero footer meta
   location: "Los Angeles, CA",
   timezone: "America/Los_Angeles",
-  availability: "Available 2026",
+  availability: "Open to 2027 roles",
 
   // Resolves the latest saved résumé in local and hosted editors.
   resume: "/resume",
@@ -30,17 +31,15 @@ export const site = {
   // Leave "" to keep the generated placeholder.
   portrait: "",
 
-  // About section copy — placeholder, edit freely.
   about: [
-    "I’m a mechanical engineer who likes problems that live in the physical world — things that have to hold a tolerance, survive a vibration spectrum, or keep a sensor pointed where it should be.",
-    "My work spans precision mechatronics, aerospace mission research, and environmental data collection. I move comfortably between CAD, fabrication, and the analysis that tells you whether a design actually works.",
+    "Hey I'm Sean!! I study Mechanical Engineering at UC Berkeley and also a transfer student from Mt. SAC. Currently I'm interested in product design, hardware testing, and fabrication. I also like photography, videography, concerts, hiking, and video games.",
   ],
 
   // Small fact grid in the About section.
   facts: [
     { label: "Based in", value: "Los Angeles, CA" },
     { label: "Focus", value: "Mechanical / Mechatronics" },
-    { label: "Status", value: "Open to 2026 roles" },
+    { label: "Status", value: "Open to 2027 roles" },
   ],
 };
 
