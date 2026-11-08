@@ -1,13 +1,13 @@
 [
   {
     "slug": "cal-sol",
-    "title": "Steering System",
-    "titleColor": "#964315",
-    "backgroundColor": "#f5e0cc",
+    "title": "Solar Vehicle",
+    "titleColor": "#fbb221",
+    "backgroundColor": "#fbb220",
     "category": "calsol",
-    "blurb": "short description",
+    "blurb": "Dynamics subteam member\nDesigned an 8-axis spoke with a 16.8% improvement over the previous design",
     "about": [
-      "full description"
+      "• Evaluated multiple wheel spoke geometries in SolidWorks and selected an eight-spoke 6061-T6 aluminum design to improve\nload distribution while minimizing mass\n• Derived a 1,558 N bump load and 169 Nm braking torque from vehicle weight and 2g vertical/1g longitudinal acceleration\nconditions; validated structural performance using static FEA, mesh convergence, and hand calculations\n• Reduced modeled wheel spoke mass by 16.8% (698 g to 581 g) compared to the previous year’s design while achieving\nFEA-predicted factors of safety of 1.6 under bump loading and 3.9 under braking"
     ],
     "role": [
       "dynamics subteam"
@@ -15,42 +15,55 @@
     "tools": [],
     "team": [],
     "year": "2026",
-    "organization": "Vehichle Compeition",
-    "status": "In progress",
-    "hue": 20,
-    "motif": "orbit",
-    "images": []
-  },
-  {
-    "slug": "matlab-quartercar",
-    "title": "Quarter Car",
-    "category": "matlab",
-    "blurb": "Describe your project in one sentence.",
-    "about": [
-      "Tell the story of your project."
-    ],
-    "role": [],
-    "tools": [],
-    "team": [],
-    "year": "2026",
-    "organization": "Personal Project",
+    "organization": "Cal Solar Vehicle Competition - Gen XII",
     "status": "In progress",
     "hue": 20,
     "motif": "orbit",
     "images": [],
-    "titleColor": "#b52b1d",
-    "backgroundColor": "#f9e7df"
+    "pdfs": [
+      {
+        "src": "/projects/8d97d47b-b5e7-4522-aed1-2a8e7a05b0d1.pdf",
+        "title": "CalSol Onboarding — Wheel Spoke Presentation Template-2",
+        "caption": "wheel spoke presentation"
+      }
+    ]
+  },
+  {
+    "slug": "matlab-quartercar",
+    "title": "Suspension Model",
+    "category": "matlab",
+    "blurb": "Developed and simulated a quarter-car suspension model using MATLAB and Simulink to analyze vehicle dynamics, ride comfort, and suspension performance",
+    "about": [
+      "Tell the story of your project."
+    ],
+    "role": [
+      "Project Lead"
+    ],
+    "tools": [
+      "MatLab",
+      "Simulink"
+    ],
+    "team": [
+      "4"
+    ],
+    "year": "2026",
+    "organization": "MathWorks Modeling Challenge",
+    "status": "In progress",
+    "hue": 20,
+    "motif": "orbit",
+    "images": [],
+    "titleColor": "#f57628",
+    "backgroundColor": "#f57528"
   },
   {
     "slug": "payload",
     "title": "Payload Design",
-    "titleColor": "#986112",
-    "backgroundColor": "#fbefcf",
+    "titleColor": "#b12031",
+    "backgroundColor": "#b12031",
     "category": "research",
     "blurb": "A tethered weather-balloon system mapping vertical air-quality profiles up to 300 m, with a custom 3D-printed sensor payload.",
     "about": [
-      "Working with a team of five, I helped design a tethered weather-balloon system to map vertical air-quality profiles at altitudes up to 300 meters.",
-      "I designed and fabricated a 3D-printed payload in Fusion 360 to house sensitive sensors, and calculated the optimal weight-to-lift ratio for stable, repeatable ascents."
+      "This project involved designing and developing a tethered weather-balloon payload to collect air-quality measurements at altitudes up to 300 meters. As the mechanical design lead of a five-person team, I focused on creating a lightweight, structurally reliable enclosure that could safely house the electronics and sensors. Using Fusion 360, I performed finite element analysis (FEA) and shape optimization, reducing payload mass by 25.9% (from 353 g to 261 g) to lower helium requirements. I also developed CAD models, engineering drawings, and a Bill of Materials to support fabrication and assembly. I validated the final design through 20 N tether-load testing with no measured deformation, plus electronics fit checks and sensor functionality testing."
     ],
     "role": [
       "Mechanical Engineer",
@@ -58,7 +71,10 @@
     ],
     "tools": [
       "Fusion 360",
+      "FEA",
+      "Shape Optimization",
       "3D Printing",
+      "Hardware Testing",
       "Sensor Integration"
     ],
     "year": "2026",
@@ -71,16 +87,43 @@
     "motif": "altitude",
     "models": [
       {
-        "src": "/projects/f705257e-3b25-4ffc-9e91-a49d88baa548.stl",
-        "title": "weatherballoon payload drawing"
+        "src": "/projects/c546c8d3-e784-417b-b554-da8224af9d7c.stl",
+        "title": "weather balloon payload optimized"
+      }
+    ],
+    "images": [
+      {
+        "src": "/projects/3e3f31bd-84b8-436e-8c8b-c05a28215324.png",
+        "alt": "balloon launch",
+        "caption": ""
+      },
+      {
+        "src": "/projects/728cf1b2-5761-44ef-853b-a25d1ce8d7cf.png",
+        "alt": "circut drawing",
+        "caption": ""
+      },
+      {
+        "src": "/projects/5a8b7e19-ccab-4556-abe8-c9b766d66ec3.png",
+        "alt": "fitment test",
+        "caption": ""
+      },
+      {
+        "src": "/projects/91fecba8-9b9d-4219-896a-b6c65b5083ab.png",
+        "alt": "electronic testing",
+        "caption": ""
+      },
+      {
+        "src": "/projects/3227f7be-8956-4cab-8650-96e8fb6d86ba.png",
+        "alt": "CAD drawing",
+        "caption": ""
       }
     ]
   },
   {
     "slug": "autonomous-object-tracking-system",
     "title": "2-Axis Gimbal",
-    "titleColor": "#b52b1d",
-    "backgroundColor": "#f9e7df",
+    "titleColor": "#000000",
+    "backgroundColor": "#000000",
     "category": "ai - mechatronics",
     "blurb": "A 3-axis motorized gimbal that detects and tracks objects in real time — a CAD-designed mechanism paired with a YOLOv8 vision pipeline.",
     "about": [
@@ -108,19 +151,22 @@
     "images": [
       {
         "src": "/projects/tracking.png",
+        "alt": "2-Axis Gimbal drawing",
         "caption": "Object-tracking gimbal prototype."
-      },
+      }
+    ],
+    "models": [
       {
-        "src": "/projects/tracking.png",
-        "caption": "Object-tracking gimbal prototype."
+        "src": "/projects/4820a36b-452d-4150-badc-76c45dcfa4bd.stl",
+        "title": "2-axis gimbal"
       }
     ]
   },
   {
     "slug": "back-lock-folding-knife",
     "title": "Folding Knife",
-    "titleColor": "#584b3e",
-    "backgroundColor": "#ece5da",
+    "titleColor": "#545902",
+    "backgroundColor": "#9a9d51",
     "category": "fabrication",
     "blurb": "A back-lock folding knife designed in SolidWorks from A2 tool steel, heat-treated to a 273% increase in hardness.",
     "about": [
@@ -144,13 +190,19 @@
     "organization": "Personal Project",
     "status": "Completed",
     "hue": 200,
-    "motif": "blade"
+    "motif": "blade",
+    "models": [
+      {
+        "src": "/projects/14487b9c-bd77-4ab7-8084-2e017623dbf4.stl",
+        "title": "knife handle (open)"
+      }
+    ]
   },
   {
     "slug": "cleanroom-microfabrication",
     "title": "Microfabrication",
-    "titleColor": "#246540",
-    "backgroundColor": "#e4efe2",
+    "titleColor": "#2873ad",
+    "backgroundColor": "#2773ad",
     "category": "cleanroom",
     "blurb": "Wafer-based microstructure fabrication at UCLA’s California NanoSystems Institute — photolithography through wet etching, tuned for repeatability.",
     "about": [
@@ -178,14 +230,17 @@
     "images": [
       {
         "src": "/projects/cleanroom.jpg",
+        "alt": "Team photo",
         "caption": "Team photo"
       },
       {
         "src": "/projects/wafer.jpg",
+        "alt": "wafer quality",
         "caption": "Inspecting wafer quality"
       },
       {
         "src": "/projects/wet_etching.jpg",
+        "alt": "substrate preperation",
         "caption": "Wafer undergoes wet etching"
       }
     ]

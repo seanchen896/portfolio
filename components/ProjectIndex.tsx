@@ -17,7 +17,6 @@ export function ProjectIndex({ projects }: { projects: Project[] }) {
   const [sides, setSides] = useState(1);
   const [active, setActive] = useState<string | null>(null);
   const skipIntro = useRef<(() => void) | null>(null);
-  const beginIntro = useRef<(() => void) | null>(null);
 
   useLayoutEffect(() => {
     const list = canonical.current;
@@ -31,8 +30,6 @@ export function ProjectIndex({ projects }: { projects: Project[] }) {
     let idle: ReturnType<typeof setTimeout> | undefined;
     let snapping = false;
     let touching = false;
-    let touchOrigin: { x: number; y: number } | null = null;
-    let startScroll = 0;
     let centeredSlug = "";
     let intro: ReturnType<typeof startPortfolioIntro> | undefined;
     let introFinished = false;
@@ -73,12 +70,8 @@ export function ProjectIndex({ projects }: { projects: Project[] }) {
       bars.forEach((bar, index) => {
         const scale = .3 + .7 * strengths[index];
         const opacity = .22 + .78 * strengths[index];
-        bar.style.setProperty("--selector-scale", String(scale));
-        bar.style.setProperty("--selector-opacity", String(opacity));
-        if (!bar.hasAttribute("data-intro-orb")) {
-          bar.style.transform = `scaleX(${scale})`;
-          bar.style.opacity = String(opacity);
-        }
+        bar.style.transform = `scaleX(${scale})`;
+        bar.style.opacity = String(opacity);
         const pitch = metrics.current.period / projects.length;
         bar.parentElement!.style.transform = `translateY(${signedDistances[index] / pitch * 28}px)`;
       });
@@ -190,14 +183,7 @@ export function ProjectIndex({ projects }: { projects: Project[] }) {
       smoothFrame = requestAnimationFrame(tick);
     }
     function wheel(event: WheelEvent) {
-      if (document.documentElement.dataset.intro) {
-        if (event.cancelable) event.preventDefault();
-        if (document.documentElement.dataset.intro === "waiting" && !event.ctrlKey && !event.metaKey && event.deltaY > Math.abs(event.deltaX)) {
-          startScroll += event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? innerHeight : 1);
-          if (startScroll >= 16) intro?.start();
-        }
-        return;
-      }
+      if (document.documentElement.dataset.intro) { if (event.cancelable) event.preventDefault(); return; }
       if (preference.matches || event.ctrlKey || event.metaKey || event.shiftKey || Math.abs(event.deltaX) >= Math.abs(event.deltaY) || document.documentElement.dataset.transition || document.querySelector("dialog[open]") || (event.target instanceof Element && event.target.closest("input, textarea, select, [contenteditable='true'], dialog"))) return;
       if (event.cancelable) event.preventDefault();
       clearTimeout(idle);
@@ -230,12 +216,7 @@ export function ProjectIndex({ projects }: { projects: Project[] }) {
       launch(nearest.center - innerHeight / 2, true);
     } };
     function key(event: KeyboardEvent) {
-      if (document.documentElement.dataset.intro) {
-        if (document.documentElement.dataset.intro === "waiting" && ["ArrowDown", "PageDown", " "].includes(event.key) && !(event.target instanceof Element && event.target.closest("button, a, input, textarea, select"))) {
-          event.preventDefault(); intro?.start();
-        }
-        return;
-      }
+      if (document.documentElement.dataset.intro) return;
       stop();
       if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || document.querySelector("dialog[open]") || document.documentElement.dataset.transition || (event.target instanceof Element && event.target.closest("a, button, input, textarea, select, [contenteditable='true']"))) return;
       if (event.key === "ArrowDown" || event.key === "ArrowUp") {
@@ -244,19 +225,8 @@ export function ProjectIndex({ projects }: { projects: Project[] }) {
         controls.current?.select((closest().index + step + projects.length) % projects.length);
       }
     }
-    function touchStart(event: TouchEvent) {
-      touching = true; stop();
-      const point = event.touches[0];
-      touchOrigin = point ? { x: point.clientX, y: point.clientY } : null;
-    }
-    function touchEnd(event: TouchEvent) {
-      const point = event.changedTouches[0];
-      if (event.type !== "touchcancel" && document.documentElement.dataset.intro === "waiting" && point && touchOrigin) {
-        const distance = Math.abs(point.clientY - touchOrigin.y);
-        if (distance >= 24 && distance > Math.abs(point.clientX - touchOrigin.x)) intro?.start();
-      }
-      touchOrigin = null; touching = false; queueSettle();
-    }
+    function touchStart() { touching = true; stop(); }
+    function touchEnd() { touching = false; queueSettle(); }
     function motionChange() {
       if (preference.matches && document.documentElement.dataset.intro) finishIntro();
       stop();
@@ -274,7 +244,6 @@ export function ProjectIndex({ projects }: { projects: Project[] }) {
       if (first) { write(first.center - innerHeight / 2); current = target = expected = scrollY; updateSelection(); }
       delete document.documentElement.dataset.intro;
       skipIntro.current = null;
-      beginIntro.current = null;
     }
     skipIntro.current = finishIntro;
     if (document.documentElement.dataset.intro === "pending" && metrics.current.period && metrics.current.sides === sides) {
@@ -285,19 +254,7 @@ export function ProjectIndex({ projects }: { projects: Project[] }) {
           write(start + (metrics.current.period * turns) % metrics.current.period);
           current = target = expected = scrollY;
           updateSelection();
-        }, finishIntro, turns => {
-          const center = start + (turns % 1) * metrics.current.period + innerHeight / 2;
-          const pitch = metrics.current.period / projects.length;
-          const reach = Math.max(220, innerHeight * .46);
-          return bars.map((_, index) => {
-            const candidates = positions.filter(item => item.index === index);
-            const nearest = candidates.reduce((best, item) => Math.abs(item.center - center) < Math.abs(best.center - center) ? item : best);
-            const distance = nearest.center - center;
-            const strength = Math.max(0, 1 - Math.abs(distance) / reach) ** 2;
-            return { y: innerHeight / 2 + distance / pitch * 28, scale: .3 + .7 * strength, opacity: .22 + .78 * strength };
-          });
-        });
-        beginIntro.current = intro.start;
+        }, finishIntro);
       } else finishIntro();
     }
 
@@ -313,7 +270,6 @@ export function ProjectIndex({ projects }: { projects: Project[] }) {
     return () => {
       intro?.cancel();
       skipIntro.current = null;
-      beginIntro.current = null;
       if (document.documentElement.dataset.intro && document.documentElement.dataset.intro !== "pending") delete document.documentElement.dataset.intro;
       cancelAnimationFrame(frame);
       stop();
@@ -336,7 +292,7 @@ export function ProjectIndex({ projects }: { projects: Project[] }) {
   return <section id="work" className="project-index" aria-label="Selected projects">
     <div className="portfolio-intro" aria-label="Opening the project portfolio">
       <div className="intro-backdrop" aria-hidden="true" />
-      <button type="button" className="intro-start" onClick={() => beginIntro.current?.()}>Scroll to start <span aria-hidden="true">↓</span></button>
+      <span className="intro-name" aria-hidden="true">Sean Chen</span>
       <button type="button" className="intro-skip" onClick={() => skipIntro.current?.()}>Skip intro</button>
     </div>
     {!!projects.length && <nav className="project-indicator" aria-label="Choose a centered project" ref={indicator} style={{ "--indicator-count": projects.length } as CSSProperties}>{projects.map((project, index) => <button type="button" key={project.slug} aria-label={`Center ${project.title}`} aria-current={selected === index ? "true" : undefined} onClick={() => controls.current?.select(index)}><span className="selector-bar" /><span className="sr-only">{project.title}</span></button>)}</nav>}
