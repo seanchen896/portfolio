@@ -1,5 +1,6 @@
 "use client";
 
+import { notifyContentSaved } from "@/lib/content-updates";
 import { uploadPolicy } from "@/lib/upload-policy";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { EditorLogin } from "./EditorLogin";
@@ -70,13 +71,27 @@ export function EditorWorkspace({ configurationError = "" }: { configurationErro
       headers.set("Content-Type", "application/json");
       response = await fetch(url, { method: "POST", headers, cache: "no-store", body: JSON.stringify({ action: "finalize-upload", kind: policy.action, staging, filename: file.name, library: policy.folder }) });
     } else response = await fetch(url, { ...init, headers, cache: "no-store" });
+    const action = form instanceof FormData ? form.get("action") : null;
+    const documentSave = form instanceof FormData && (form.has("projects") || action === "save-photography");
+    if (response.ok && (documentSave || action === "upload-resume")) {
+      const saved = await response.clone().json();
+      const check = await fetch("/api/editor", { headers: { Authorization: `Bearer ${session?.token ?? ""}` }, cache: "no-store" });
+      const current = await check.json();
+      const matches = action === "upload-resume" ? typeof saved.resume?.src === "string" && current.resume?.src === saved.resume.src
+        : typeof saved.version === "string" && (action === "save-photography" ? current.photographyVersion : current.version) === saved.version;
+      if (!check.ok || !matches) {
+        if (check.status === 401) lock("Editor locked. Enter your password to continue.");
+        return new Response(JSON.stringify({ error: current.error || "Could not confirm the saved changes. Keep this editor open and reload the website to check before editing again." }), { status: check.ok ? 409 : check.status, headers: { "Content-Type": "application/json" } });
+      }
+      notifyContentSaved();
+    }
     if (response.status === 401) lock("Editor locked. Enter your password to continue.");
     return response;
   }
   if (!session) return <EditorLogin onUnlock={unlock} notice={notice} setupError={configurationError} />;
   return <EditorSession.Provider value={request}>
     <nav className="editor-portfolio-tabs" role="tablist" aria-label="Portfolio editor">{(["engineering", "photography"] as const).map(value => <button type="button" role="tab" id={`editor-tab-${value}`} aria-selected={tab === value} aria-controls={`editor-panel-${value}`} tabIndex={tab === value ? 0 : -1} key={value} onClick={() => setTab(value)} onKeyDown={event => { if (event.key === "ArrowLeft" || event.key === "ArrowRight") { event.preventDefault(); const next = value === "engineering" ? "photography" : "engineering"; setTab(next); document.getElementById(`editor-tab-${next}`)?.focus(); } }}>{value === "engineering" ? "Engineering" : "Photography"}</button>)}</nav>
-    <div id="editor-panel-engineering" role="tabpanel" aria-labelledby="editor-tab-engineering" hidden={tab !== "engineering"}><ProjectEditor initial={session.workspace.projects} initialVersion={session.workspace.version} resume={session.workspace.resume} /></div>
-    <div id="editor-panel-photography" role="tabpanel" aria-labelledby="editor-tab-photography" hidden={tab !== "photography"}><PhotographyEditor initial={session.workspace.photography ?? emptyPhotography()} initialVersion={session.workspace.photographyVersion ?? ""} /></div>
+    <div id="editor-panel-engineering" role="tabpanel" aria-labelledby="editor-tab-engineering" hidden={tab !== "engineering"}><ProjectEditor initial={session.workspace.projects} initialVersion={session.workspace.version} storage={session.workspace.storage ?? "local"} resume={session.workspace.resume} /></div>
+    <div id="editor-panel-photography" role="tabpanel" aria-labelledby="editor-tab-photography" hidden={tab !== "photography"}><PhotographyEditor initial={session.workspace.photography ?? emptyPhotography()} initialVersion={session.workspace.photographyVersion ?? ""} storage={session.workspace.storage ?? "local"} /></div>
   </EditorSession.Provider>;
 }

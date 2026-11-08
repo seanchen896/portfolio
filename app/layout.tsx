@@ -3,6 +3,7 @@ import Script from "next/script";
 import { PortfolioTransitions } from "@/components/PortfolioTransitions";
 import { PortfolioMode } from "@/components/PortfolioMode";
 import { PortfolioMotion } from "@/components/PortfolioMotion";
+import { PortfolioContentSync } from "@/components/PortfolioContentSync";
 import { PortfolioSound } from "@/components/PortfolioSound";
 import "./globals.css";
 
@@ -35,7 +36,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head><meta name="page-type" content="service" /><meta name="site-kind" content="tech" /><script dangerouslySetInnerHTML={{ __html: `try{document.documentElement.dataset.theme=localStorage.getItem('portfolio-theme')||'light'}catch(e){}document.documentElement.dataset.motion=matchMedia('(prefers-reduced-motion: reduce)').matches?'off':'on';if(location.pathname==='/'&&document.documentElement.dataset.motion!=='off')document.documentElement.dataset.intro='pending'` }} /></head>
-      <body><link rel="stylesheet" href="/taste/motion.css" /><PortfolioSound><PortfolioMode><PortfolioTransitions><PortfolioMotion />{children}</PortfolioTransitions></PortfolioMode></PortfolioSound><Script src="/taste/motion.js" type="module" strategy="afterInteractive" /></body>
+      <body><link rel="stylesheet" href="/taste/motion.css" /><PortfolioSound><PortfolioContentSync /><PortfolioMode><PortfolioTransitions><PortfolioMotion />{children}</PortfolioTransitions></PortfolioMode></PortfolioSound><Script src="/taste/motion.js" type="module" strategy="afterInteractive" /></body>
     </html>
   );
 }

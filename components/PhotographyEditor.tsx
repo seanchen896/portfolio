@@ -8,7 +8,7 @@ import type { Photograph, PhotographyData, PhotoCollection } from "@/lib/photogr
 const input = "mt-2 block w-full rounded border border-line bg-white/50 p-3 text-sm text-ink";
 const button = "rounded border border-line px-4 py-2 text-sm hover:bg-paper-2 disabled:opacity-40";
 
-export function PhotographyEditor({ initial, initialVersion }: { initial: PhotographyData; initialVersion: string }) {
+export function PhotographyEditor({ initial, initialVersion, storage = "local" }: { initial: PhotographyData; initialVersion: string; storage?: "local" | "blob" }) {
   const request = useEditorRequest();
   const [data, setData] = useState(initial); const [version, setVersion] = useState(initialVersion);
   const [selected, setSelected] = useState<string | null>(initial.photos[0]?.id ?? null);
@@ -62,7 +62,7 @@ export function PhotographyEditor({ initial, initialVersion }: { initial: Photog
       const form = new FormData(); form.set("action", "save-photography"); form.set("photography", JSON.stringify(data)); form.set("version", version);
       const response = await request("/api/editor", { method: "POST", body: form }); const result = await response.json();
       if (!response.ok) throw new Error(result.error);
-      setVersion(result.version); setDirty(false); setMessage("Photography saved. Your photographs are now published in photography mode.");
+      setVersion(result.version); setDirty(false); setMessage(storage === "blob" ? "Photography saved to the live website. Open previews update automatically." : "Photography saved locally. Push your changes to update the live Vercel website.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Unable to save photography."); }
     finally { setBusy(false); }
   }

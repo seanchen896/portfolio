@@ -12,7 +12,7 @@ type Entry = Omit<Project, "index">;
 const input = "mt-2 block w-full rounded border border-line bg-white/50 p-3 text-sm text-ink";
 const button = "rounded border border-line px-4 py-2 text-sm hover:bg-paper-2 disabled:opacity-40";
 
-export function ProjectEditor({ initial, initialVersion, resume }: { initial: Entry[]; initialVersion: string; resume: ResumeSettings }) {
+export function ProjectEditor({ initial, initialVersion, resume, storage = "local" }: { initial: Entry[]; initialVersion: string; resume: ResumeSettings; storage?: "local" | "blob" }) {
   const editorRequest = useEditorRequest();
   const [projects, setProjects] = useState(initial);
   const [version, setVersion] = useState(initialVersion);
@@ -105,7 +105,7 @@ export function ProjectEditor({ initial, initialVersion, resume }: { initial: En
       const response = await editorRequest("/api/editor", { method: "POST", body: data });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
-      setVersion(result.version); setDirty(false); setMessage("Saved. Refresh the website to see your changes.");
+      setVersion(result.version); setDirty(false); setMessage(storage === "blob" ? "Saved to the live website. Open previews update automatically." : "Saved locally. Local previews update automatically. Push your changes to update the live Vercel website.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Save failed."); }
     finally { setBusy(false); }
   }
@@ -145,6 +145,7 @@ export function ProjectEditor({ initial, initialVersion, resume }: { initial: En
         <p className="text-xs text-ink-soft">Locks automatically when you leave or reload.</p>
         <a href="/" target="_blank" rel="noreferrer" className={button}>Open website ↗</a>
       </div>
+      <p className="mt-4 text-sm text-ink-soft">{storage === "blob" ? "Editing the live website. Saved changes appear in your open previews automatically." : "Editing local files. To update the live Vercel website, commit and push your saved changes."}</p>
       <ResumeEditor initial={resume} disabled={busy} onBusyChange={setBusy} />
       <div className="mt-8 grid gap-8 lg:grid-cols-[260px_1fr]">
         <aside><button disabled={busy} className={`${button} w-full`} onClick={add}>+ New project</button>

@@ -13,10 +13,14 @@ export function editorConfigurationError() {
 }
 
 export async function readBlobRecord(name: string) {
-  const result = await get(blobKey(name), { access: "private", useCache: false });
+  // Compressed Blob responses use weak HTTP ETags (W/...), which cannot be
+  // used with ifMatch. Read the original representation for a strong revision.
+  const result = await get(blobKey(name), { access: "private", useCache: false, headers: { "Accept-Encoding": "identity" } });
   if (!result) return null;
   if (result.statusCode !== 200) throw new Error("Unable to read saved content.");
-  return { text: await new Response(result.stream).text(), etag: result.blob.etag };
+  const text = await new Response(result.stream).text();
+  if (!result.blob.etag || result.blob.etag.startsWith("W/")) throw new Error("Storage did not return a usable content revision. Please retry.");
+  return { text, etag: result.blob.etag };
 }
 export async function writeBlobRecord(name: string, text: string, etag?: string) {
   try {
