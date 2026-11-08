@@ -1,5 +1,6 @@
 "use client";
 
+import { uploadPolicy } from "@/lib/upload-policy";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { EditorLogin } from "./EditorLogin";
 import { ProjectEditor } from "./ProjectEditor";
@@ -9,9 +10,9 @@ import { EditorSession } from "./EditorSession";
 import type { Project } from "@/lib/projects";
 import type { ResumeSettings } from "@/lib/site-settings";
 
-type Workspace = { photography?: PhotographyData; photographyVersion?: string; projects: Omit<Project, "index">[]; version: string; resume: ResumeSettings };
+type Workspace = { photography?: PhotographyData; photographyVersion?: string; projects: Omit<Project, "index">[]; version: string; resume: ResumeSettings; storage?: "local" | "blob"; uploadPrefix?: string | null };
 
-export function EditorWorkspace() {
+export function EditorWorkspace({ configurationError = "" }: { configurationError?: string }) {
   const [session, setSession] = useState<{ token: string; workspace: Workspace } | null>(null);
   const [tab, setTab] = useState<"engineering" | "photography">("engineering");
   const [notice, setNotice] = useState("");
@@ -53,11 +54,26 @@ export function EditorWorkspace() {
   async function request(url: string, init?: RequestInit) {
     const headers = new Headers(init?.headers);
     headers.set("Authorization", `Bearer ${session?.token ?? ""}`);
-    const response = await fetch(url, { ...init, headers, cache: "no-store" });
+    let response: Response;
+    const form = init?.body;
+    const file = form instanceof FormData ? form.get("file") : null;
+    if (session?.workspace.storage === "blob" && form instanceof FormData && file instanceof File) {
+      const policy = uploadPolicy(form.get("action"), file.name, form.get("library"));
+      if (!file.size || file.size > policy.maximumSizeInBytes) throw new Error(`Choose a non-empty file up to ${policy.maximumSizeInBytes / 1024 / 1024} MB.`);
+      const staging = `staging/${crypto.randomUUID()}.${policy.extension}`;
+      const { upload } = await import("@vercel/blob/client");
+      await upload(`${session.workspace.uploadPrefix}${staging}`, file, {
+        access: "private", handleUploadUrl: "/api/editor/upload", contentType: policy.contentType,
+        multipart: file.size > 4 * 1024 * 1024, headers: { Authorization: `Bearer ${session.token}` },
+        clientPayload: JSON.stringify({ action: policy.action, filename: file.name, library: policy.folder }),
+      });
+      headers.set("Content-Type", "application/json");
+      response = await fetch(url, { method: "POST", headers, cache: "no-store", body: JSON.stringify({ action: "finalize-upload", kind: policy.action, staging, filename: file.name, library: policy.folder }) });
+    } else response = await fetch(url, { ...init, headers, cache: "no-store" });
     if (response.status === 401) lock("Editor locked. Enter your password to continue.");
     return response;
   }
-  if (!session) return <EditorLogin onUnlock={unlock} notice={notice} />;
+  if (!session) return <EditorLogin onUnlock={unlock} notice={notice} setupError={configurationError} />;
   return <EditorSession.Provider value={request}>
     <nav className="editor-portfolio-tabs" role="tablist" aria-label="Portfolio editor">{(["engineering", "photography"] as const).map(value => <button type="button" role="tab" id={`editor-tab-${value}`} aria-selected={tab === value} aria-controls={`editor-panel-${value}`} tabIndex={tab === value ? 0 : -1} key={value} onClick={() => setTab(value)} onKeyDown={event => { if (event.key === "ArrowLeft" || event.key === "ArrowRight") { event.preventDefault(); const next = value === "engineering" ? "photography" : "engineering"; setTab(next); document.getElementById(`editor-tab-${next}`)?.focus(); } }}>{value === "engineering" ? "Engineering" : "Photography"}</button>)}</nav>
     <div id="editor-panel-engineering" role="tabpanel" aria-labelledby="editor-tab-engineering" hidden={tab !== "engineering"}><ProjectEditor initial={session.workspace.projects} initialVersion={session.workspace.version} resume={session.workspace.resume} /></div>

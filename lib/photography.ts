@@ -18,7 +18,7 @@ export function validatePhotography(value: unknown): asserts value is Photograph
     collections.add(collection.id);
   }
   for (const photo of data.photos) {
-    if (!photo || !id(photo.id) || ids.has(photo.id) || typeof photo.src !== "string" || !/^\/(?:photography|projects)\/[a-zA-Z0-9_.-]+\.(?:jpg|jpeg|png|webp|gif|avif)$/i.test(photo.src) || photo.src.includes("..") || !text(photo.title) || !photo.title.trim() || !text(photo.description) || !text(photo.category)) throw new Error("Each photograph needs a unique ID, a title, and a local image.");
+    if (!photo || !id(photo.id) || ids.has(photo.id) || typeof photo.src !== "string" || !/^\/(?:media\/)?(?:photography|projects)\/[a-zA-Z0-9_.-]+\.(?:jpg|jpeg|png|webp|gif|avif)$/i.test(photo.src) || photo.src.includes("..") || !text(photo.title) || !photo.title.trim() || !text(photo.description) || !text(photo.category)) throw new Error("Each photograph needs a unique ID, a title, and a local image.");
     if (!Array.isArray(photo.collectionIds) || new Set(photo.collectionIds).size !== photo.collectionIds.length || !photo.collectionIds.every(value => collections.has(value))) throw new Error("Choose existing collections for each photograph.");
     if (photo.date !== undefined && (!/^\d{4}-\d{2}-\d{2}$/.test(photo.date) || !Number.isFinite(Date.parse(photo.date)) || new Date(photo.date).toISOString().slice(0, 10) !== photo.date)) throw new Error("Use a valid photograph date.");
     for (const size of [photo.width, photo.height]) if (size !== undefined && (!Number.isInteger(size) || size <= 0 || size > 100000)) throw new Error("Invalid photo dimensions.");

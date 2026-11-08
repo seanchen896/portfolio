@@ -105,7 +105,7 @@ export function ProjectEditor({ initial, initialVersion, resume }: { initial: En
       const response = await editorRequest("/api/editor", { method: "POST", body: data });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error);
-      setVersion(result.version); setDirty(false); setMessage("Saved to your project files. Refresh the preview to see your changes.");
+      setVersion(result.version); setDirty(false); setMessage("Saved. Refresh the website to see your changes.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Save failed."); }
     finally { setBusy(false); }
   }
@@ -141,7 +141,7 @@ export function ProjectEditor({ initial, initialVersion, resume }: { initial: En
   return (
     <main className="mx-auto max-w-7xl px-5 py-10 sm:px-8">
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-8">
-        <div><p className="label text-ink-soft">Local workspace</p><h1 className="serif mt-3 text-5xl">Edit your projects</h1><p className="mt-3 max-w-xl text-sm text-ink-soft">Add projects, write their stories, and upload photos. Save when you’re ready to update your website.</p></div>
+        <div><p className="label text-ink-soft">Portfolio workspace</p><h1 className="serif mt-3 text-5xl">Edit your projects</h1><p className="mt-3 max-w-xl text-sm text-ink-soft">Add projects, write their stories, and upload photos. Save when you’re ready to update your website.</p></div>
         <p className="text-xs text-ink-soft">Locks automatically when you leave or reload.</p>
         <a href="/" target="_blank" rel="noreferrer" className={button}>Open website ↗</a>
       </div>

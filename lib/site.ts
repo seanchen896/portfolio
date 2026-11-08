@@ -1,4 +1,3 @@
-import settings from "@/content/site-settings.json";
 
 /**
  * Central site configuration — edit everything about "you" here in one place.
@@ -24,8 +23,8 @@ export const site = {
   timezone: "America/Los_Angeles",
   availability: "Available 2026",
 
-  // Managed through the local editor's Résumé section.
-  resume: settings.resume.src,
+  // Resolves the latest saved résumé in local and hosted editors.
+  resume: "/resume",
 
   // Drop an image into /public and set its path here (e.g. "/portrait.jpg").
   // Leave "" to keep the generated placeholder.

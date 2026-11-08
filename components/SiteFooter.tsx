@@ -12,6 +12,6 @@ export function SiteFooter({ theme: _theme, projectColor = false }: { theme?: "l
   return <footer className="portfolio-footer">
     <div className="footer-left">{projectColor ? <span className="theme-control"><span className="theme-dot" />Project</span> : <button onClick={toggleTheme} aria-label={`Switch to ${dark ? "light" : "dark"} theme`} className="theme-control"><span className="theme-dot" />{dark ? "Dark" : "Light"}</button>}<MuteButton /></div>
     <div className="footer-center"><a className="resume-link text-link" href={site.resume} download="Sean-Chen-Resume.pdf" aria-label="Download résumé"><span className="resume-label-full">Download résumé ↓</span><span className="resume-label-short" aria-hidden="true">Résumé ↓</span></a></div>
-    <div className="footer-right">{process.env.NODE_ENV === "development" && <a className="editor-link text-link" href="/editor">Edit projects ↗</a>}</div>
+    <div className="footer-right"><a className="editor-link text-link" href="/editor">Edit projects ↗</a></div>
   </footer>;
 }

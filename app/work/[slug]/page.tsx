@@ -3,14 +3,12 @@ import { notFound } from "next/navigation";
 import { ProjectDetail } from "@/components/ProjectDetail";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
-import { getAdjacent, getProject, projects } from "@/lib/projects";
+import { publishedProjects } from "@/lib/published-content";
 import { site } from "@/lib/site";
 import type { CSSProperties } from "react";
 import { getProjectColors } from "@/lib/project-colors";
 
-export function generateStaticParams() {
-  return projects.map((p) => ({ slug: p.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -18,7 +16,8 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const project = getProject(slug);
+  const projects = await publishedProjects();
+  const project = projects.find(project => project.slug === slug);
   if (!project) return { title: "Not found" };
   return {
     title: `${project.title} — ${site.name}`,
@@ -37,10 +36,13 @@ export default async function ProjectPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const project = getProject(slug);
+  const projects = await publishedProjects();
+  const project = projects.find(project => project.slug === slug);
   if (!project) notFound();
 
-  const { next, previous } = getAdjacent(slug);
+  const index = projects.indexOf(project);
+  const next = projects[(index + 1) % projects.length];
+  const previous = projects[(index - 1 + projects.length) % projects.length];
   const colors = getProjectColors(project);
 
   return (

@@ -29,7 +29,7 @@ Saving projects updates the site without reloading or locking your current edito
 - Use **Résumé download** at the top of the editor to select a PDF and click **Update résumé**. This saves immediately, separately from project edits, and updates every résumé link. Previous files remain on disk. Refresh an already-open website preview after updating.
 - Click **Save changes**, then refresh the website preview. Changes are saved to `content/projects.json`; uploaded images live in `public/projects/`.
 - Commit both the content file and uploaded photos when deploying. Removing a photo from a gallery keeps the original file on disk.
-- The editor is available only in local development; it is disabled in production. Keep the dev server bound to localhost (`npm run dev -- --hostname 127.0.0.1`).
+- The editor works locally with file storage, and on Vercel after the setup below. Keep the dev server bound to localhost (`npm run dev -- --hostname 127.0.0.1`).
 - You can still edit `content/projects.json` directly, including PDF links, project order, and placeholder styles. Avoid editing the file while you have unsaved changes in the editor; reload the editor after external changes.
 
 ## Where to edit content (no design changes needed)
@@ -45,7 +45,7 @@ Saving projects updates the site without reloading or locking your current edito
 ## Structure
 
 - `app/page.tsx` — oversized project index with shared navigation and controls
-- `app/work/[slug]/page.tsx` — dark project detail pages (statically generated)
+- `app/work/[slug]/page.tsx` — project detail pages (read current saved content at runtime)
 - `components/` — `Hero`, `ProjectIndex` (hover-preview list), `ProjectDetail`,
   `ProjectMedia` (real image or generated blueprint placeholder), `AboutSection`, etc.
 
@@ -60,7 +60,7 @@ Saving projects updates the site without reloading or locking your current edito
 - **Motion:** text gradually fades down from above as it enters view, rolling title hovers, photo previews, a selected title moving into the project heading with a page crossfade, and draggable photo galleries. The title transition uses the View Transitions API; other browsers navigate normally.
 - **Navigation:** click the role beside Sean’s name for About, which slides in as a white left panel over a dimmed, blurred site (full width on phones). Its content scrolls independently; Close, Escape, or clicking the desktop backdrop dismiss it. Contact retains its own panel. Reduced motion skips the drawer animation.
 - Scrolling within projects is native, with no delayed scrolling or viewport snapping. Fresh outward wheel/trackpad input at a project boundary accumulates toward a 60px threshold (touch: 48px), then slides to the adjacent project. The paired page slide, cooldown, reduced-motion support, keyboard edge navigation and nested viewer controls remain available.
-- The footer places the résumé download in the center and the local **Edit projects** link at the right; the year and motion toggle have been removed. Gallery arrows and keyboard navigation work without dragging.
+- The footer places the résumé download in the center and the **Edit projects** link at the right; the year and motion toggle have been removed. Gallery arrows and keyboard navigation work without dragging.
 - `DESIGN.md` records the supplied design reference and intentional exceptions to the taste skill’s generic templates.
 
 ## To-do for you
@@ -74,7 +74,7 @@ Saving projects updates the site without reloading or locking your current edito
 
 Sign in at `/editor`, select a project, and use **3D models → Add STL files**. Both binary and ASCII STL files are supported (25 MB maximum). Give each model a title and save. Its project page includes rotate, zoom, pan, reset, wireframe, and download controls. Models remain publicly viewable and downloadable.
 
-Every editor visit starts at the password screen. Unlocking creates a visit-only token held in memory, with no persistent login cookie or browser storage. Leaving/reloading revokes access, and five minutes of inactivity locks the editor automatically. Tokens also expire server-side after 30 minutes. Uploads, résumé changes and project saves use the same protected session. Five incorrect attempts trigger a five-minute cooldown. The password remains a salted hash with a separate session secret in ignored `.env.local`; keep that file when restarting the workspace. The editor remains disabled in production.
+Every editor visit starts at the password screen. Unlocking creates a visit-only token held in memory, with no persistent login cookie or browser storage. Leaving/reloading revokes access, and five minutes of inactivity locks the editor automatically. Tokens also expire server-side after 30 minutes. Uploads, résumé changes and project saves use the same protected session. Five incorrect attempts trigger a five-minute cooldown. The password remains a salted hash with a separate session secret in ignored `.env.local`; keep that file when restarting the workspace. On Vercel, sessions and revocation are persisted in private Blob storage so authentication survives function cold starts.
 
 ## Photography mode
 
@@ -85,3 +85,26 @@ Open `/photography` for the separate photography portfolio. It starts empty unti
 In `/editor`, unlock once and select **Photography**. Upload multiple photos (10 MB each), edit titles/descriptions/categories/dates, replace or delete references, reorder photos, assign collections and select featured/cover photos. Expand **Preview unsaved photography** to review the draft, then **Save photography**. Switching editor tabs preserves both drafts. Authentication and automatic locking are shared with engineering. Saves use the existing authenticated endpoint and stale-version checks.
 
 Photography records live in `content/photography.json`; uploads use `public/photography/`. Save operations are atomic, and removing photos never deletes original files. Engineering projects, résumé settings and existing uploads are stored separately and remain unchanged.
+
+## Editing on Vercel
+
+The hosted editor uses **one private Vercel Blob store** for content, sessions and uploaded media. No existing project files or assets are migrated or deleted. Until a content document is first saved in Blob, the website uses its checked-in JSON as its initial value.
+
+1. In the Vercel project dashboard, open **Storage**, create/connect a **private Blob store**, and connect it to the Production environment. This supplies `BLOB_READ_WRITE_TOKEN` automatically. Public stores are incompatible with this setup.
+2. In **Settings → Environment Variables**, add `EDITOR_PASSWORD_HASH` and `EDITOR_SESSION_SECRET` for Production. Copy their existing values from your ignored local `.env.local` file to keep your current password. These are server-only secrets; never use `NEXT_PUBLIC_` names or commit them.
+3. Redeploy the project after setting those variables. Open `/editor`, sign in, and save normally. Missing setup is explained on the login page instead of returning a 404.
+
+Photo, STL and PDF uploads go directly to private Blob storage using a short-lived, password-authorized upload token. The server validates and finalizes each file; only finalized media paths are served publicly through `/media/...`. This supports existing 50 MB photo and 25 MB STL/PDF limits without sending the file through Vercel's small incoming request-body limit. Uploads keep unique filenames; removing a project or photo does not delete saved assets. For hosted photo uploads use JPG, PNG, WebP, GIF or AVIF; HEIC/TIFF/BMP conversion remains available locally on macOS.
+
+The homepage, photography page, project pages and `/resume` read current saved content at runtime. New project slugs work immediately without rebuilding. Refresh an already-open preview after saving. Simultaneous or stale saves are rejected using Blob ETags rather than silently overwriting newer edits.
+
+**Local and hosted edits are separate.** Local editing still writes to `content/` and `public/`, and those changes require a push to publish. Once a document has been edited online, its live Blob version takes precedence over the checked-in version even after later deployments. Production and Preview Blob namespaces are separate; local runs with an explicitly configured Blob token use a third development namespace. Keep only one production deployment active against a store. Blob usage is billed by Vercel according to your storage plan.
+
+Validate the production editor without a Vercel account:
+
+```bash
+npm run build
+npm run test:editor
+```
+
+The integration test runs the production server against an isolated local Blob HTTP emulator using the real SDK. It checks cold starts, session revocation, stale saves, new routes, upload authorization, large media streaming, résumé/photography/STL saving and missing configuration. It uses temporary test credentials and never modifies your local saved content or connects to your real Blob store.

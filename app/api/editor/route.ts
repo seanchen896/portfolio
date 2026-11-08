@@ -1,8 +1,11 @@
 import { validatePhotography } from "@/lib/photography";
-import { editorAuthenticated } from "@/lib/editor-auth";
+import { del, get } from "@vercel/blob";
+import { blobKey, cloudStorage, editorConfigurationError, readContent, saveContent, saveMedia, SaveConflict } from "@/lib/editor-storage";
+import { uploadPolicy, validStagingPath } from "@/lib/upload-policy";
+import { editorAuthenticated, localRequest } from "@/lib/editor-auth";
 import { STLLoader } from "three/addons/loaders/STLLoader.js";
 import { NextRequest, NextResponse } from "next/server";
-import { readFile, writeFile, rename, mkdir, mkdtemp, rm } from "node:fs/promises";
+import { readFile, writeFile, mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
@@ -10,8 +13,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
 export const runtime = "nodejs";
-const photographyPath = path.join(process.cwd(), "content/photography.json");
-const dataPath = path.join(process.cwd(), "content/projects.json");
+export const maxDuration = 60;
 const runFile = promisify(execFile);
 
 async function convertPhoto(bytes: Buffer, extension: string) {
@@ -31,34 +33,48 @@ async function convertPhoto(bytes: Buffer, extension: string) {
 }
 
 export async function GET(request: NextRequest) {
-  if (process.env.NODE_ENV !== "development") return new Response(null, { status: 404 });
-  if (!(await editorAuthenticated(request))) return NextResponse.json({ error: "Sign in to open the editor." }, { status: 401 });
-  const [version, settings] = await Promise.all([readFile(dataPath, "utf8"), readFile(path.join(process.cwd(), "content/site-settings.json"), "utf8")]);
-  const photographyVersion = await readFile(photographyPath, "utf8");
-  return NextResponse.json({ photography: JSON.parse(photographyVersion), photographyVersion, projects: JSON.parse(version), version, resume: JSON.parse(settings).resume }, { headers: { "Cache-Control": "no-store" } });
+  const setupError = editorConfigurationError();
+  if (setupError) return NextResponse.json({ error: setupError }, { status: 503 });
+  try {
+    if (!(await editorAuthenticated(request))) return NextResponse.json({ error: "Sign in to open the editor." }, { status: 401 });
+    const [version, settings] = await Promise.all([readContent("projects.json"), readContent("site-settings.json")]);
+    const photographyVersion = await readContent("photography.json");
+    return NextResponse.json({ photography: JSON.parse(photographyVersion), photographyVersion, projects: JSON.parse(version), version, resume: JSON.parse(settings).resume, storage: cloudStorage() ? "blob" : "local", uploadPrefix: cloudStorage() ? blobKey("") : null }, { headers: { "Cache-Control": "no-store" } });
+  } catch {
+    return NextResponse.json({ error: "Saved content is temporarily unavailable. Try again shortly." }, { status: 503 });
+  }
 }
 
 export async function POST(request: NextRequest) {
-  // Only the local development editor can write to the checkout.
-  if (process.env.NODE_ENV !== "development") return new Response(null, { status: 404 });
-  if (!(await editorAuthenticated(request))) return NextResponse.json({ error: "Editor locked. Sign in again to continue." }, { status: 401 });
-  const origin = request.headers.get("origin");
-  const host = request.headers.get("host");
-  if (!origin || new URL(origin).host !== host || !["localhost", "127.0.0.1", "[::1]"].includes(new URL(origin).hostname)) {
-    return NextResponse.json({ error: "Use the editor on localhost." }, { status: 403 });
-  }
+  const setupError = editorConfigurationError();
+  if (setupError) return NextResponse.json({ error: setupError }, { status: 503 });
+  if (!localRequest(request)) return NextResponse.json({ error: "Open the editor on this website to save changes." }, { status: 403 });
+  let staging: string | null = null;
   try {
-    const form = await request.formData();
+    if (!(await editorAuthenticated(request))) return NextResponse.json({ error: "Editor locked. Sign in again to continue." }, { status: 401 });
+    let form: FormData;
+    if (request.headers.get("content-type")?.includes("application/json")) {
+      const payload = await request.json();
+      if (payload.action !== "finalize-upload" || !cloudStorage()) throw new Error("Invalid upload request.");
+      const policy = uploadPolicy(payload.kind, payload.filename, payload.library);
+      if (!validStagingPath(payload.staging, policy.extension)) throw new Error("Invalid upload destination.");
+      const uploadedPath: string = payload.staging;
+      staging = uploadedPath;
+      const stored = await get(blobKey(uploadedPath), { access: "private", useCache: false });
+      if (!stored || stored.statusCode !== 200) throw new Error("The uploaded file could not be found. Try uploading again.");
+      if (!stored.blob.size || stored.blob.size > policy.maximumSizeInBytes) { await stored.stream.cancel(); throw new Error("This file exceeds the upload size limit."); }
+      const bytes = await new Response(stored.stream).arrayBuffer();
+      form = new FormData();
+      form.set("action", policy.action); form.set("library", policy.folder);
+      form.set("file", new File([bytes], payload.filename, { type: policy.contentType }));
+    } else form = await request.formData();
     if (form.get("action") === "save-photography") {
       const raw = form.get("photography");
       if (typeof raw !== "string" || raw.length > 5000000) throw new Error("Invalid photography data.");
       const photography: unknown = JSON.parse(raw);
       validatePhotography(photography);
-      const current = await readFile(photographyPath, "utf8");
-      if (String(form.get("version")).replace(/\r\n/g, "\n") !== current.replace(/\r\n/g, "\n")) return NextResponse.json({ error: "Photography changed in another tab. Reload before saving." }, { status: 409 });
       const updated = JSON.stringify(photography, null, 2) + "\n";
-      const temp = `${photographyPath}.${randomUUID()}.tmp`;
-      await writeFile(temp, updated); await rename(temp, photographyPath);
+      await saveContent("photography.json", updated, String(form.get("version")));
       return NextResponse.json({ version: updated });
     }
     if (form.get("action") === "upload-pdf" || form.get("action") === "upload-resume") {
@@ -69,19 +85,15 @@ export async function POST(request: NextRequest) {
       const name = `${randomUUID()}.pdf`;
       const isResume = form.get("action") === "upload-resume";
       const folder = isResume ? "resumes" : "projects";
-      const directory = path.join(process.cwd(), "public", folder);
-      await mkdir(directory, { recursive: true });
-      await writeFile(path.join(directory, name), bytes);
+      const src = await saveMedia(folder, name, bytes, "application/pdf");
       if (isResume) {
-        const settingsPath = path.join(process.cwd(), "content/site-settings.json");
-        const settings = JSON.parse(await readFile(settingsPath, "utf8"));
-        const resume = { src: `/resumes/${name}`, filename: file.name, updatedAt: new Date().toISOString() };
-        const temp = `${settingsPath}.${randomUUID()}.tmp`;
-        await writeFile(temp, JSON.stringify({ ...settings, resume }, null, 2) + "\n");
-        await rename(temp, settingsPath);
+        const current = await readContent("site-settings.json");
+        const settings = JSON.parse(current);
+        const resume = { src, filename: file.name, updatedAt: new Date().toISOString() };
+        await saveContent("site-settings.json", JSON.stringify({ ...settings, resume }, null, 2) + "\n", current);
         return NextResponse.json({ resume });
       }
-      return NextResponse.json({ src: `/projects/${name}` });
+      return NextResponse.json({ src });
     }
     if (form.get("action") === "upload-stl") {
       const file = form.get("file");
@@ -97,10 +109,8 @@ export async function POST(request: NextRequest) {
       } catch { throw new Error("This file does not contain a valid STL model."); }
       finally { geometry?.dispose(); }
       const name = `${randomUUID()}.stl`;
-      const directory = path.join(process.cwd(), "public/projects");
-      await mkdir(directory, { recursive: true });
-      await writeFile(path.join(directory, name), Buffer.from(bytes));
-      return NextResponse.json({ src: `/projects/${name}` });
+      const src = await saveMedia("projects", name, Buffer.from(bytes), "application/octet-stream");
+      return NextResponse.json({ src });
     }
     if (form.get("action") === "upload") {
       const file = form.get("file");
@@ -115,10 +125,8 @@ export async function POST(request: NextRequest) {
       if (!ext) throw new Error("Use a JPG, PNG, WebP, GIF, AVIF, HEIC, HEIF, TIFF, or BMP photo.");
       const name = `${randomUUID()}.${ext}`;
       const folder = form.get("library") === "photography" ? "photography" : "projects";
-      const directory = path.join(process.cwd(), "public", folder);
-      await mkdir(directory, { recursive: true });
-      await writeFile(path.join(directory, name), bytes);
-      return NextResponse.json({ src: `/${folder}/${name}` });
+      const src = await saveMedia(folder, name, bytes, { jpg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif", avif: "image/avif" }[ext]);
+      return NextResponse.json({ src });
     }
     const raw = form.get("projects");
     if (typeof raw !== "string" || raw.length > 1000000) throw new Error("Invalid project data.");
@@ -141,21 +149,18 @@ export async function POST(request: NextRequest) {
         if (!Array.isArray(p[field]) || !p[field].every((v: unknown) => typeof v === "string")) throw new Error(`Invalid ${field}.`);
       }
       if (!Number.isFinite(p.hue) || !["orbit", "altitude", "scatter", "swarm", "wafer", "circuit", "wave", "blade"].includes(p.motif)) throw new Error("Invalid placeholder style.");
-      if (p.models !== undefined && (!Array.isArray(p.models) || !p.models.every((m: { src?: unknown; title?: unknown }) => m && typeof m.src === "string" && /^\/projects\/[a-zA-Z0-9_-]+\.stl$/.test(m.src) && typeof m.title === "string" && m.title.trim()))) throw new Error("Each STL needs a local file and a title.");
+      if (p.models !== undefined && (!Array.isArray(p.models) || !p.models.every((m: { src?: unknown; title?: unknown }) => m && typeof m.src === "string" && /^\/(?:media\/)?projects\/[a-zA-Z0-9_-]+\.stl$/.test(m.src) && typeof m.title === "string" && m.title.trim()))) throw new Error("Each STL needs a local file and a title.");
       if (p.image && !localPath(p.image)) throw new Error("Images must use local paths.");
       if (p.images && (!Array.isArray(p.images) || !p.images.every((im: unknown) => typeof im === "string" ? localPath(im) : im && typeof im === "object" && localPath((im as {src: unknown}).src) && ["alt", "caption"].every(k => (im as Record<string, unknown>)[k] === undefined || typeof (im as Record<string, unknown>)[k] === "string")))) throw new Error("Invalid gallery image.");
       if (p.pdf !== undefined && !validPdf(p.pdf)) throw new Error("Invalid PDF.");
       if (p.pdfs !== undefined && (!Array.isArray(p.pdfs) || !p.pdfs.every(validPdf))) throw new Error("Invalid PDF attachments.");
     }
-    // A stale browser tab must not overwrite newer saved work.
-    const current = await readFile(dataPath, "utf8");
-    if (String(form.get("version")).replace(/\r\n/g, "\n") !== current.replace(/\r\n/g, "\n")) return NextResponse.json({ error: "Projects changed since you opened the editor. Reload before saving." }, { status: 409 });
     const updated = JSON.stringify(projects, null, 2) + "\n";
-    const temp = `${dataPath}.${randomUUID()}.tmp`;
-    await writeFile(temp, updated);
-    await rename(temp, dataPath);
+    await saveContent("projects.json", updated, String(form.get("version")));
     return NextResponse.json({ version: updated });
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Unable to save." }, { status: 400 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Unable to save." }, { status: error instanceof SaveConflict ? 409 : 400 });
+  } finally {
+    if (staging) await del(blobKey(staging)).catch(() => {});
   }
 }

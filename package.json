@@ -6,9 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:editor": "node scripts/check-production-editor.cjs"
   },
   "dependencies": {
+    "@vercel/blob": "^2.8.2",
     "framer-motion": "^12.4.2",
     "next": "15.1.11",
     "react": "19.0.0",
