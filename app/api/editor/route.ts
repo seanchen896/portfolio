@@ -1,5 +1,5 @@
 import { validatePhotography } from "@/lib/photography";
-import { del, get } from "@vercel/blob";
+import { del, get, head } from "@vercel/blob";
 import { blobKey, cloudStorage, editorConfigurationError, readContent, saveContent, saveMedia, SaveConflict } from "@/lib/editor-storage";
 import { uploadPolicy, validStagingPath } from "@/lib/upload-policy";
 import { editorAuthenticated, localRequest } from "@/lib/editor-auth";
@@ -37,6 +37,16 @@ export async function GET(request: NextRequest) {
   if (setupError) return NextResponse.json({ error: setupError }, { status: 503 });
   try {
     if (!(await editorAuthenticated(request))) return NextResponse.json({ error: "Sign in to open the editor." }, { status: 401 });
+    if (cloudStorage() && request.nextUrl.searchParams.get("diagnostics") === "storage") {
+      const key = blobKey("content/projects.json");
+      const stored = await get(key, { access: "private", useCache: false });
+      const metadata = await head(key).catch(() => null);
+      const identity = await get(key, { access: "private", useCache: false, headers: { "Accept-Encoding": "identity" } });
+      const diagnostic = { exists: !!stored, readETag: stored?.blob.etag ?? null, writeETag: metadata?.etag ?? null, encoding: stored?.headers.get("content-encoding") ?? null, identityETag: identity?.blob.etag ?? null, identityEncoding: identity?.headers.get("content-encoding") ?? null };
+      if (stored?.stream) await stored.stream.cancel();
+      if (identity?.stream) await identity.stream.cancel();
+      return NextResponse.json(diagnostic, { headers: { "Cache-Control": "no-store" } });
+    }
     const [version, settings] = await Promise.all([readContent("projects.json"), readContent("site-settings.json")]);
     const photographyVersion = await readContent("photography.json");
     return NextResponse.json({ photography: JSON.parse(photographyVersion), photographyVersion, projects: JSON.parse(version), version, resume: JSON.parse(settings).resume, storage: cloudStorage() ? "blob" : "local", uploadPrefix: cloudStorage() ? blobKey("") : null }, { headers: { "Cache-Control": "no-store" } });
