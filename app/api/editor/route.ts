@@ -2,6 +2,7 @@ import { validatePhotography } from "@/lib/photography";
 import { del, get } from "@vercel/blob";
 import { blobKey, cloudStorage, editorConfigurationError, readContent, saveContent, saveMedia, SaveConflict } from "@/lib/editor-storage";
 import { uploadPolicy, validStagingPath } from "@/lib/upload-policy";
+import { readUpload } from "@/lib/read-upload";
 import { editorAuthenticated, localRequest } from "@/lib/editor-auth";
 import { STLLoader } from "three/addons/loaders/STLLoader.js";
 import { NextRequest, NextResponse } from "next/server";
@@ -60,13 +61,12 @@ export async function POST(request: NextRequest) {
       if (!validStagingPath(payload.staging, policy.extension)) throw new Error("Invalid upload destination.");
       const uploadedPath: string = payload.staging;
       staging = uploadedPath;
-      const stored = await get(blobKey(uploadedPath), { access: "private", useCache: false });
+      const stored = await get(blobKey(uploadedPath), { access: "private", useCache: false, headers: { "Accept-Encoding": "identity" } });
       if (!stored || stored.statusCode !== 200) throw new Error("The uploaded file could not be found. Try uploading again.");
-      if (!stored.blob.size || stored.blob.size > policy.maximumSizeInBytes) { await stored.stream.cancel(); throw new Error("This file exceeds the upload size limit."); }
-      const bytes = await new Response(stored.stream).arrayBuffer();
+      const bytes = await readUpload(stored.stream, policy.maximumSizeInBytes);
       form = new FormData();
       form.set("action", policy.action); form.set("library", policy.folder);
-      form.set("file", new File([bytes], payload.filename, { type: policy.contentType }));
+      form.set("file", new File([new Uint8Array(bytes)], payload.filename, { type: policy.contentType }));
     } else form = await request.formData();
     if (form.get("action") === "save-photography") {
       const raw = form.get("photography");
