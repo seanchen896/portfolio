@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import { socialMetadata } from "@/lib/metadata";
 import { publishedPhotography } from "@/lib/published-content";
 import { PhotographyGallery } from "@/components/PhotographyGallery";
 import { SiteHeader } from "@/components/SiteHeader";
 import { site } from "@/lib/site";
 import { MuteButton } from "@/components/PortfolioSound";
 
-export const metadata: Metadata = { title: "Photography — Sean Chen", description: "Selected photographs and collections by Sean Chen." };
+export const metadata: Metadata = socialMetadata("Photography — Sean Chen", "Selected photographs and collections by Sean Chen.", "/photography");
 export const dynamic = "force-dynamic";
 export default async function PhotographyPage() {
   const data = await publishedPhotography();

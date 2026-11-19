@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { metadataBase, socialMetadata } from "@/lib/metadata";
 import { PortfolioTransitions } from "@/components/PortfolioTransitions";
 import { PortfolioMode } from "@/components/PortfolioMode";
 import { PortfolioMotion } from "@/components/PortfolioMotion";
@@ -8,22 +9,22 @@ import { PortfolioSound } from "@/components/PortfolioSound";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Sean Chen — Mechanical Engineer",
-  description:
-    "Selected mechanical engineering work by Sean Chen: precision controls, aerospace mission research, and environmental data research.",
-  openGraph: {
-    title: "Sean Chen — Mechanical Engineer",
-    description:
-      "Selected mechanical engineering work: precision controls, aerospace mission research, and environmental data research.",
-    type: "website",
-    siteName: "Sean Chen",
+  metadataBase,
+  ...socialMetadata(
+    "Sean Chen — Mechanical Engineer",
+    "Selected mechanical engineering work by Sean Chen: product design, precision controls, aerospace mission research, and environmental data research.",
+    "/",
+  ),
+  applicationName: "Sean Chen Portfolio",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "16x16 32x32 48x48", type: "image/x-icon" },
+      { url: "/brand/icon.svg", sizes: "any", type: "image/svg+xml" },
+      { url: "/icon-32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "Sean Chen — Mechanical Engineer",
-    description:
-      "Mechanical engineer working across precision controls, aerospace, and environmental research.",
-  },
+  manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({

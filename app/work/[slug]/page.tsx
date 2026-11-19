@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { socialMetadata } from "@/lib/metadata";
 import { notFound } from "next/navigation";
 import { ProjectDetail } from "@/components/ProjectDetail";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -19,15 +20,11 @@ export async function generateMetadata({
   const projects = await publishedProjects();
   const project = projects.find(project => project.slug === slug);
   if (!project) return { title: "Not found" };
-  return {
-    title: `${project.title} — ${site.name}`,
-    description: project.blurb,
-    openGraph: {
-      title: `${project.title} — ${site.name}`,
-      description: project.blurb,
-      type: "article",
-    },
-  };
+  return socialMetadata(
+    `${project.title} — ${site.name}`,
+    project.blurb,
+    `/work/${encodeURIComponent(slug)}`,
+  );
 }
 
 export default async function ProjectPage({

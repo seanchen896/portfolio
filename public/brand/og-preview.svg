@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<rect width="1200" height="630" fill="#f5f5f2"/>
+<g fill="none" stroke="#d5d5d0"><circle cx="1040" cy="300" r="235"/><circle cx="1040" cy="300" r="180"/><circle cx="1040" cy="300" r="100"/><path d="M760 300h440M1040 20v560"/></g>
+<g fill="#111" font-family="Helvetica,Arial,sans-serif">
+<text x="64" y="88" font-size="18" letter-spacing="2">SELECTED WORK / PORTFOLIO</text>
+<text x="57" y="285" font-size="146" font-weight="700" letter-spacing="-9">Sean Chen</text>
+<text x="64" y="354" font-size="40" letter-spacing="-1">Mechanical Engineer</text>
+<text x="64" y="414" font-size="22" fill="#555">Product design. Precision controls. Research.</text>
+<path d="M64 505h1072" stroke="#111"/>
+<text x="64" y="554" font-size="18">UC BERKELEY</text><text x="1136" y="554" text-anchor="end" font-size="18">DESIGN / BUILD / TEST</text>
+</g></svg>
