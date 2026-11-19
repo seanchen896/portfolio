@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 
 // Prefer the stable production domain over a temporary Vercel preview URL.
 const configuredUrl = process.env.NEXT_PUBLIC_SITE_URL ||
-  process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL ||
-  "http://localhost:3000";
+  process.env.VERCEL_PROJECT_PRODUCTION_URL ||
+  "https://seannchen.vercel.app";
 export const metadataBase = new URL(
   /^https?:\/\//.test(configuredUrl) ? configuredUrl : `https://${configuredUrl}`,
 );

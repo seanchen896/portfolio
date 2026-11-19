@@ -113,6 +113,6 @@ The integration test runs the production server against an isolated local Blob H
 
 `public/og-image.png` is the shared 1200 × 630 social preview. Home, project and photography pages provide matching Open Graph/Twitter metadata, image alt text and canonical URLs through `lib/metadata.ts`. Browser icons include SVG, a 16/32/48px ICO, PNG fallbacks, an Apple touch icon and web manifest icons.
 
-Set `NEXT_PUBLIC_SITE_URL=https://your-domain.example` in your deployment environment when using a custom domain, then rebuild. Without it, Vercel's `VERCEL_PROJECT_PRODUCTION_URL` supplies the stable production origin (followed by `VERCEL_URL`); local development falls back to `http://localhost:3000`. Never set the production value to a localhost URL.
+Set `NEXT_PUBLIC_SITE_URL=https://your-domain.example` in your deployment environment when using a custom domain, then rebuild. Without it, Vercel's `VERCEL_PROJECT_PRODUCTION_URL` supplies the stable production origin; otherwise the portfolio’s public URL, `https://seannchen.vercel.app`, is used. Never set the production value to a localhost URL.
 
 The editable SVG artwork lives in `public/brand/`. Run `node scripts/generate-brand-assets.cjs` to regenerate the PNG/ICO assets; edit the script's vector sources to change the artwork. After deployment, existing social previews may require a refresh in the platform's link inspector or a new share because platforms cache previews.
